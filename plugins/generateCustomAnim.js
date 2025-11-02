@@ -793,6 +793,12 @@ Draw.loadPlugin(function(editorUi)
 		function removeInterDiagramLink(sourceId, targetId) {
 			animationScript += `remove ${sourceId} ${targetId}\n`;
 		}
+		function startReturnEdge(sourceId, targetId) {
+			animationScript += `ret ${sourceId} ${targetId} start\n`;
+		}
+		function stopReturnEdge(sourceId, targetId) {
+			animationScript += `ret ${sourceId} ${targetId} stop\n`;
+		}
 
 
 		// Guard against empty flows or missing lookups
@@ -938,7 +944,9 @@ Draw.loadPlugin(function(editorUi)
 				console.warn('[generateCustomAnim] No matching call found for implicit return');
 				return;
 			}
-			// No explicit return arrow: only unwind highlights/state
+			// Draw dashed return edge briefly, then unwind highlights/state
+			startReturnEdge(msg.source, msg.target);
+			wait();
 			if (matchingCall.matchedMethodId && highlighted.has(matchingCall.matchedMethodId)) {
 				unhighlight(matchingCall.matchedMethodId);
 			}
@@ -974,6 +982,7 @@ Draw.loadPlugin(function(editorUi)
 					unhighlight(msg.fragment);
 				}
 			}
+			stopReturnEdge(msg.source, msg.target);
 			wait();
 		}
 

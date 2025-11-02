@@ -259,6 +259,100 @@ Draw.loadPlugin(function(editorUi)
 									next();
 									return;
 								}
+                			else if (tokens[0] === 'ret' && tokens.length > 3) {
+									console.log('inside ret');
+									var status = tokens[3];
+									var source = mapping[tokens[1]];
+									var target = mapping[tokens[2]];
+									
+									if (source && target) {
+										if (status === 'start' || status === 'toggle') {
+											console.log('start and toggle');
+											var exists = false;
+											for (var id in graph.getModel().cells) {
+												var c = graph.getModel().cells[id];
+												if (
+												graph.getModel().isEdge(c) &&
+												graph.getModel().getTerminal(c, true) === source &&
+												graph.getModel().getTerminal(c, false) === target
+												) {
+													var s = graph.getCellStyle(c);
+													if (s['returnEdge'] === '1' || (c.style && c.style.indexOf('returnEdge=1') > -1)) {
+														exists = true;
+														break;
+													}
+												}
+											}
+
+												if (!exists) {
+													graph.getModel().beginUpdate();
+													try {
+														var parent = graph.getDefaultParent();
+														var srcB = graph.getCellBounds(source);
+														var tgtB = graph.getCellBounds(target);
+														var toRight = srcB != null && tgtB != null ? (srcB.x < tgtB.x) : true;
+														var srcAbsY = srcB ? (srcB.y + srcB.height) : null;
+														var entryRel = 1;
+														if (tgtB && srcAbsY != null) {
+															entryRel = (srcAbsY - tgtB.y) / Math.max(1, tgtB.height);
+															if (entryRel < 0) entryRel = 0;
+															if (entryRel > 1) entryRel = 1;
+														}
+														var style = 'strokeColor=#008cff;strokeWidth=1;dashed=1;endArrow=block;endFill=1;endSize=6;rounded=0;returnEdge=1;edgeStyle=orthogonalEdgeStyle;elbow=horizontal;jettySize=0;sourcePerimeter=1;targetPerimeter=1;'
+															+ 'exitX=' + (toRight ? '1' : '0') + ';exitY=1;exitPerimeter=1;'
+															+ 'entryX=' + (toRight ? '0' : '1') + ';entryY=' + entryRel + ';entryPerimeter=1;';
+														var edge = graph.insertEdge(
+															parent,
+															null,
+															'',
+															source,
+															target,
+															style
+														);
+													} catch (e) {
+														console.error('[customAnimation] Error inserting return edge:', e);
+													} finally {
+														graph.getModel().endUpdate();
+													}
+													try { graph.orderCells(false, [edge]); } catch (e) {}
+													setTimeout(function() { animateCells(graph, [edge]); }, 0);
+												}
+										}
+										else if (status === 'stop') {
+											console.log('stop');
+											var edgesToRemove = [];
+											for (var id in graph.getModel().cells) {
+												var c = graph.getModel().cells[id];
+												if (
+													graph.getModel().isEdge(c) &&
+													graph.getModel().getTerminal(c, true) === source &&
+													graph.getModel().getTerminal(c, false) === target
+												) {
+													var s = graph.getCellStyle(c);
+													if (s['returnEdge'] === '1' || (c.style && c.style.indexOf('returnEdge=1') > -1)) {
+													edgesToRemove.push(c);
+													}
+												}
+											}
+											if (edgesToRemove.length > 0) {
+												graph.getModel().beginUpdate();
+												try {
+													graph.removeCells(edgesToRemove);
+												} catch (e) {
+													console.error('[customAnimation] Error removing return edge(s):', e);
+												} finally {
+													graph.getModel().endUpdate();
+												}
+											}
+										}
+										else {
+											console.warn('[customAnimation] Could not find source or tager cell for ret command:', tokens[1], tokens[2]);
+										}
+									}
+									step++;
+									next();
+									return;
+								}
 
 								var cell = mapping[tokens[1]];
 								
