@@ -1,6 +1,6 @@
-<mxfile host="Electron" modified="2025-11-02T21:32:27.074Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.1.16 Chrome/120.0.6099.109 Electron/28.1.0 Safari/537.36" etag="zwNTJ0NY77mhUrPrMn8k" version="22.1.16" type="device">
+<mxfile host="Electron" modified="2025-11-02T21:39:17.351Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.1.16 Chrome/120.0.6099.109 Electron/28.1.0 Safari/537.36" etag="4-s2LVcnOufahH1uk8av" version="22.1.16" type="device">
   <diagram id="LoopExample" name="Sequence Diagram with Loop">
-    <mxGraphModel dx="2490" dy="1225" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2298" dy="1131" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" value="Sequence_diagram" style="locked=1;" parent="0" />
@@ -107,57 +107,57 @@
         <mxCell id="Pgit-uUgvuKdo1_Qlihn-1" value="Background" style="locked=1;" parent="0" />
         <mxCell id="Pgit-uUgvuKdo1_Qlihn-2" value="Class_diagram" style="locked=1;" parent="0" />
         <mxCell id="Pgit-uUgvuKdo1_Qlihn-3" value="Customer" style="swimlane;fontStyle=2;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-2">
-          <mxGeometry x="90" y="620" width="160" height="34" as="geometry">
+          <mxGeometry x="70" y="610" width="160" height="34" as="geometry">
             <mxRectangle x="230" y="140" width="160" height="26" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
         <mxCell id="Pgit-uUgvuKdo1_Qlihn-7" value="" style="line;html=1;strokeWidth=1;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=1;labelPosition=right;points=[];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-3">
           <mxGeometry y="26" width="160" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-28" value="WebShop" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-2">
-          <mxGeometry x="320" y="620" width="160" height="250" as="geometry">
-            <mxRectangle x="550" y="140" width="160" height="26" as="alternateBounds" />
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-61" value="WebShop" style="swimlane;fontStyle=2;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-2">
+          <mxGeometry x="320" y="610" width="160" height="250" as="geometry">
+            <mxRectangle x="230" y="140" width="160" height="26" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-34" value="" style="line;html=1;strokeWidth=1;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=1;labelPosition=right;points=[];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-28">
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-62" value="" style="line;html=1;strokeWidth=1;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=1;labelPosition=right;points=[];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-61">
           <mxGeometry y="26" width="160" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-35" value="+openShop()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-28">
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-35" value="+openShop()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-61">
           <mxGeometry y="34" width="160" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-36" value="+browseItems()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-28">
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-60" value="+loadShop()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-61">
           <mxGeometry y="60" width="160" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-54" value="+addToCart(productID)" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-28">
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-59" value="+displayCheckoutPage()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-61">
           <mxGeometry y="86" width="160" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-55" value="+displayItemList()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-28">
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-58" value="+itemAdded()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-61">
           <mxGeometry y="112" width="160" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-56" value="+checkout()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-28">
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-56" value="+checkout()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-61">
           <mxGeometry y="138" width="160" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-58" value="+itemAdded()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-28">
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-55" value="+displayItemList()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-61">
           <mxGeometry y="164" width="160" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-59" value="+displayCheckoutPage()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-28">
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-54" value="+addToCart(productID)" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-61">
           <mxGeometry y="190" width="160" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-60" value="+loadShop()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-28">
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-36" value="+browseItems()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-61">
           <mxGeometry y="216" width="160" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-44" value="InventorySystem" style="swimlane;fontStyle=0;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-2">
-          <mxGeometry x="540" y="620" width="170" height="90" as="geometry">
-            <mxRectangle x="550" y="140" width="160" height="26" as="alternateBounds" />
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-63" value="InventorySystem" style="swimlane;fontStyle=2;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeLast=0;collapsible=1;marginBottom=0;rounded=0;shadow=0;strokeWidth=1;editable=1;movable=1;resizable=1;rotatable=1;deletable=1;locked=0;connectable=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-2">
+          <mxGeometry x="570" y="610" width="170" height="90" as="geometry">
+            <mxRectangle x="230" y="140" width="160" height="26" as="alternateBounds" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-50" value="" style="line;html=1;strokeWidth=1;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=1;labelPosition=right;points=[];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-44">
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-64" value="" style="line;html=1;strokeWidth=1;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=1;labelPosition=right;points=[];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-63">
           <mxGeometry y="26" width="170" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-51" value="+checkAvailability(productID)" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-44">
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-51" value="+checkAvailability(productID)" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-63">
           <mxGeometry y="34" width="170" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="Pgit-uUgvuKdo1_Qlihn-57" value="+itemAvailable()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-44">
+        <mxCell id="Pgit-uUgvuKdo1_Qlihn-57" value="+itemAvailable()" style="text;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=1;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;editable=1;movable=1;resizable=1;deletable=1;locked=0;connectable=1;fontStyle=0;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="Pgit-uUgvuKdo1_Qlihn-63">
           <mxGeometry y="60" width="170" height="26" as="geometry" />
         </mxCell>
       </root>
