@@ -602,7 +602,7 @@ Draw.loadPlugin(function(editorUi)
 		console.log("Returns", returns);
 
 		// Traverse the flow in global vertical order, including backward arrows
-		var flow = []; 
+		var flow = [];
 		var visited = new Set();
 
 		// Collect all messages with valid sourcePoint and targetPoint, sort by y (top to bottom)
@@ -637,6 +637,7 @@ Draw.loadPlugin(function(editorUi)
 						target: msg.target,
 						fragment: msg.fragment,
 						subFragment: msg.subFragment,
+						type: (msg.dashed ? 'return' : 'call')
 					});
 				}
 
@@ -650,15 +651,80 @@ Draw.loadPlugin(function(editorUi)
 					target: msg.target,
 					fragment: msg.fragment,
 					subFragment: msg.subFragment,
+					type: (msg.dashed ? 'return' : 'call')
 				});
 				visited.add(msg.id);
 			}
 		});
 
-		console.log("Sequence Flow (ordered):", flow);
-		flow.forEach((msg, idx) => {
+		var flowWithImplicit = [];
+		var callStack = [];
+		flow.forEach((evt) => {
+			const isCall = evt.type === 'call' || (!evt.type && calls.some(c => c.id === evt.id));
+			const isReturn = evt.type === 'return' || (!evt.type && returns.some(r => r.id === evt.id));
+
+			if (isCall) {
+				while (callStack.length > 0 && callStack[callStack.length - 1].target !== evt.source) {
+					const toClose = callStack.pop();
+					flowWithImplicit.push({
+						id: null,
+						label: `implicit return for ${toClose.label || toClose.id}`,
+						matchedMethodId: toClose.matchedMethodId,
+						source: toClose.target,
+						target: toClose.source,
+						fragment: toClose.fragment,
+						subFragment: toClose.subFragment,
+						matchingCallId: toClose.id,
+						type: 'implicitReturn'
+					});
+				}
+
+				flowWithImplicit.push(evt);
+				callStack.push(evt);
+			} else if (isReturn) {
+				while (callStack.length > 0 && !(callStack[callStack.length - 1].source === evt.target && callStack[callStack.length - 1].target === evt.source)) {
+					const toClose = callStack.pop();
+					flowWithImplicit.push({
+						id: null,
+						label: `implicit return for ${toClose.label || toClose.id}`,
+						matchedMethodId: toClose.matchedMethodId,
+						source: toClose.target,
+						target: toClose.source,
+						fragment: toClose.fragment,
+						subFragment: toClose.subFragment,
+						matchingCallId: toClose.id,
+						type: 'implicitReturn'
+					});
+				}
+
+				flowWithImplicit.push(evt);
+				if (callStack.length > 0 && callStack[callStack.length - 1].source === evt.target && callStack[callStack.length - 1].target === evt.source) {
+					callStack.pop();
+				}
+			} else {
+				flowWithImplicit.push(evt);
+			}
+		});
+
+		while (callStack.length > 0) {
+			const toClose = callStack.pop();
+			flowWithImplicit.push({
+				id: null,
+				label: `implicit return for ${toClose.label || toClose.id}`,
+				matchedMethodId: toClose.matchedMethodId,
+				source: toClose.target,
+				target: toClose.source,
+				fragment: toClose.fragment,
+				subFragment: toClose.subFragment,
+				matchingCallId: toClose.id,
+				type: 'implicitReturn'
+			});
+		}
+
+		console.log("Sequence Flow (ordered):", flowWithImplicit);
+		flowWithImplicit.forEach((msg, idx) => {
 			console.log(
-				`Step ${idx + 1}: [${msg.id}] "${msg.label}" from ${msg.source || "?"} to ${msg.target || "?"}`
+				`Step ${idx + 1}: [${msg.id || msg.type}] "${msg.label}" from ${msg.source || "?"} to ${msg.target || "?"}`
 			);
 		});
 
@@ -728,13 +794,21 @@ Draw.loadPlugin(function(editorUi)
 			animationScript += `remove ${sourceId} ${targetId}\n`;
 		}
 
-		const initialLifeline = findLifelineByBarId(flow[0].source);
-		const initialActivationBar = flow[0].source;
-		const classElement = initialLifeline.matchedClassId;
-		const methodElement = flow[0].matchedMethodId;
+
+		// Guard against empty flows or missing lookups
+		if (!flowWithImplicit || flowWithImplicit.length === 0) {
+			console.warn('[generateCustomAnim] Empty flow; returning empty animation script');
+			return animationScript;
+		}
+
+		const initialSource = flowWithImplicit[0]?.source;
+		const initialLifeline = initialSource ? findLifelineByBarId(initialSource) : null;
+		const initialActivationBar = initialSource || null;
+		const classElement = initialLifeline?.matchedClassId;
+		const methodElement = flowWithImplicit[0]?.matchedMethodId;
 
 		// Animate initial lifeline and activation bar
-		if (initialLifeline.id && !highlighted.has(initialLifeline.id)) {
+		if (initialLifeline?.id && !highlighted.has(initialLifeline.id)) {
 			highlightCell(initialLifeline.id);
 		}
 		if (initialActivationBar && !highlighted.has(initialActivationBar)) {
@@ -750,14 +824,16 @@ Draw.loadPlugin(function(editorUi)
 
 		console.log(`fragmentMessages: ${fragmentMessages}`)
 
-		flow.forEach((msg) => {
+		flowWithImplicit.forEach((msg) => {
 			const sourceLifeline = findLifelineByBarId(msg.source);
 			const targetLifeline = findLifelineByBarId(msg.target);
 
 			if (msg.fragment !== "") { 
 				animateFragment(msg.fragment);
 			}
-			if (calls.some(call => call.id === msg.id)) {
+			if (msg.type === 'implicitReturn') {
+				animateImplicitReturn(msg, sourceLifeline, targetLifeline);
+			} else if (calls.some(call => call.id === msg.id)) {
 				animateCall(msg, sourceLifeline, targetLifeline);
 			} else if (returns.some(ret => ret.id === msg.id)) {
 				animateReturn(msg, sourceLifeline, targetLifeline, allCells);
@@ -852,6 +928,51 @@ Draw.loadPlugin(function(editorUi)
 						console.log("HIDE FRAG")
 					}
 				}			
+			}
+			wait();
+		}
+
+		function animateImplicitReturn(msg, sourceLifeline, targetLifeline) {
+			const matchingCall = calls.find(c => c.id === msg.matchingCallId);
+			if (!matchingCall) {
+				console.warn('[generateCustomAnim] No matching call found for implicit return');
+				return;
+			}
+			// No explicit return arrow: only unwind highlights/state
+			if (matchingCall.matchedMethodId && highlighted.has(matchingCall.matchedMethodId)) {
+				unhighlight(matchingCall.matchedMethodId);
+			}
+			if (matchingCall.id && highlighted.has(matchingCall.id)) {
+				unhighlight(matchingCall.id);
+			}
+			if (matchingCall.matchedMethodId && matchingCall.id) {
+				removeInterDiagramLink(matchingCall.matchedMethodId, matchingCall.id);
+			}
+			if (msg.source && highlighted.has(msg.source)) {
+				unhighlight(msg.source);
+			}
+			if (sourceLifeline?.id && highlighted.has(sourceLifeline.id) && !hasHighlightedActivationBar(sourceLifeline.id)) {
+				unhighlight(sourceLifeline.id);
+			}
+			if (sourceLifeline?.matchedClassId && (!sourceLifeline.id || !highlighted.has(sourceLifeline.id)) && !hasHighlightedMethod(sourceLifeline.matchedClassId)) {
+				unhighlight(sourceLifeline.matchedClassId);
+				if (sourceLifeline.matchedClassId && sourceLifeline.id) {
+					removeInterDiagramLink(sourceLifeline.matchedClassId, sourceLifeline.id);
+				}
+			}
+			const relation = findRelationBetweenClasses(targetLifeline?.matchedClassId, sourceLifeline?.matchedClassId);
+			if (relation && highlighted.has(relation.id)) {
+				unhighlight(relation.id);
+			}
+			if (msg.fragment !== "" && highlighted.has(msg.fragment)) {
+				if (matchingCall.id) {
+					fragmentMessages.get(msg.fragment)?.delete(matchingCall.id);
+				}
+				const setRef = fragmentMessages.get(msg.fragment);
+				if (setRef && setRef.size === 0) {
+					fragmentMessages.delete(msg.fragment);
+					unhighlight(msg.fragment);
+				}
 			}
 			wait();
 		}
