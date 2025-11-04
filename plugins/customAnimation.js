@@ -560,6 +560,7 @@ Draw.loadPlugin(function(editorUi)
 		uploadInput.accept = '.txt';
 		uploadInput.style.display = 'none';
 		var uploadBtn = mxUtils.button('Upload', function() {
+			uploadInput.value = null;
 			uploadInput.click();
 		});
 		uploadBtn.className += ' custom-anim-actionbtn';
@@ -574,7 +575,7 @@ Draw.loadPlugin(function(editorUi)
 					// Move cursor to the end
 					list.selectionStart = list.selectionEnd = list.value.length;
 					list.focus();
-				};
+				};				
 				reader.readAsText(file);
 			} else {
 				console.warn("No file selected or file input error.");
