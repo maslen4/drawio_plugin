@@ -844,9 +844,33 @@ Draw.loadPlugin(function(editorUi)
 
 		console.log(`fragmentMessages: ${fragmentMessages}`)
 
-		flowWithImplicit.forEach((msg) => {
+		// Helper to check if a fragment is a loop
+		function isLoopFragment(fragmentId) {
+			if (!fragmentId) return false;
+			const fragCell = allCells.find(c => c.id === fragmentId);
+			if (!fragCell) return false;
+			const label = (fragCell.label || '').toString().trim().toLowerCase();
+			return label === 'loop';
+		}
+
+		// Track which fragments we've processed to handle loop repeats
+		const processedFragments = new Map(); // fragmentId -> { startIndex, endIndex }
+		let currentFragmentId = null;
+		let currentFragmentStartLength = 0;
+
+		flowWithImplicit.forEach((msg, msgIndex) => {
 			const sourceLifeline = findLifelineByBarId(msg.source);
 			const targetLifeline = findLifelineByBarId(msg.target);
+
+			// Track fragment boundaries for loop repetition
+			if (msg.fragment !== "" && msg.fragment !== currentFragmentId) {
+				// We're entering a new fragment
+				currentFragmentId = msg.fragment;
+				currentFragmentStartLength = animationScript.length;
+			} else if (msg.fragment === "") {
+				// We've left a fragment
+				currentFragmentId = null;
+			}
 
 			if (msg.fragment !== "") { 
 				animateFragment(msg.fragment);
@@ -857,6 +881,18 @@ Draw.loadPlugin(function(editorUi)
 				animateCall(msg, sourceLifeline, targetLifeline);
 			} else if (returns.some(ret => ret.id === msg.id)) {
 				animateReturn(msg, sourceLifeline, targetLifeline, allCells);
+			}
+
+			// If this is the last message of a loop fragment, repeat 2 more times
+			const isLastMessageOfFragment = (msgIndex === flowWithImplicit.length - 1) || 
+											(flowWithImplicit[msgIndex + 1].fragment !== msg.fragment);
+			if (isLastMessageOfFragment && msg.fragment !== "" && isLoopFragment(msg.fragment)) {
+				// Capture the animation commands generated for this fragment
+				const fragmentCommands = animationScript.substring(currentFragmentStartLength);
+				// Append the same commands 2 more times for a total of 3 iterations
+				animationScript += fragmentCommands;
+				animationScript += fragmentCommands;
+				console.log(`[Loop Fragment] Repeated fragment ${msg.fragment} 3 times total`);
 			}
 		});
 
