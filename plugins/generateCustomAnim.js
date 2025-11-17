@@ -364,13 +364,27 @@ Draw.loadPlugin(function(editorUi)
 					return subFragment.lines?.some(line => line.id === targetId);
 				}
 
-				fragment.child_areas.forEach(subFragment => {
-					if (isIdInFragmentLines(subFragment, msg.id)) {
-						msg.subFragment = subFragment.id;
+				// Check if message is inside this fragment's Y range
+				const msgY = msg.y;
+				const fragY = fragment.y;
+				const fragHeight = fragment.height;
+				if (msgY >= fragY && msgY <= (fragY + fragHeight)) {
+					// If fragment has child areas, assign to specific child area
+					if (fragment.child_areas.length > 0) {
+						fragment.child_areas.forEach(subFragment => {
+							if (isIdInFragmentLines(subFragment, msg.id)) {
+								msg.subFragment = subFragment.id;
+								msg.fragment = fragment.id;
+								msg.fragmentParent = fragment.parent;
+							}
+						})
+					} else {
+						// Fragment has no child areas: assign message directly to fragment
+						msg.subFragment = fragment.id;
 						msg.fragment = fragment.id;
 						msg.fragmentParent = fragment.parent;
 					}
-				})
+				}
 			})
 		})
 
