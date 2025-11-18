@@ -854,6 +854,9 @@ Draw.loadPlugin(function(editorUi)
 		}
 
 		function animateCall(msg, sourceLifeline, targetLifeline) {
+			if (msg.source && !highlighted.has(msg.source)) {
+				highlightCell(msg.source);
+			}
 			if (!highlighted.has(msg.id)) { 									// highlight sipky v SqD
 				highlightArrow(msg.id);
 			}
