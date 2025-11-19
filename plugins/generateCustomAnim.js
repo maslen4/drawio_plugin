@@ -326,6 +326,9 @@ Draw.loadPlugin(function(editorUi)
 	function parseSequenceDiagram(sqdCells, cdCells, allCells) {
 		// Extract lifelines from sqdCells
 		var lifelines = extractLifelines(sqdCells, allCells);
+		const activationBarIds = new Set(
+			lifelines.flatMap(lf => lf.activationBars.map(ab => ab.id))
+		);
 
 		// Match lifelines to classes by label 
 		lifelines.forEach(lf => {
@@ -334,6 +337,15 @@ Draw.loadPlugin(function(editorUi)
 				lf.matchedClassId = match.getAttribute("id");
 			}
 		});
+
+		function resolveActivationEndpoint(cell, attrName, coordinateName) {
+			const explicit = cell.getAttribute(attrName);
+			if (explicit && activationBarIds.has(explicit)) {
+				return explicit;
+			}
+			const estimated = estimateClosestActivationBar(cell, lifelines, coordinateName, allCells);
+			return estimated ? estimated.id : null;
+		}
 
 		// Extract messages/arrows (edge="1") from sqdCells
 		var messages = sqdCells.filter(cell =>
@@ -344,8 +356,8 @@ Draw.loadPlugin(function(editorUi)
 				id: cell.getAttribute("id"),
 				label: cell.getAttribute("value"),
 				parent: cell.getAttribute("parent"),
-				source: cell.getAttribute("source") || estimateClosestActivationBar(cell, lifelines, 'sourcePoint', allCells)['id'],
-				target: cell.getAttribute("target") || estimateClosestActivationBar(cell, lifelines, 'targetPoint', allCells)['id'],
+				source: resolveActivationEndpoint(cell, "source", "sourcePoint"),
+				target: resolveActivationEndpoint(cell, "target", "targetPoint"),
 				dashed: cell.getAttribute("style").includes("dashed=1"), // true / false
 				fragment: "",
 				fragmentParent: "",
@@ -807,9 +819,17 @@ Draw.loadPlugin(function(editorUi)
 			return animationScript;
 		}
 
-		const initialSource = flowWithImplicit[0]?.source;
+		let initialSource = flowWithImplicit[0]?.source;
+		if (!initialSource) {
+			const firstWithSource = flowWithImplicit.find(evt => evt.source);
+			initialSource = firstWithSource?.source || null;
+		}
 		const initialLifeline = initialSource ? findLifelineByBarId(initialSource) : null;
 		const initialActivationBar = initialSource || null;
+		function isInitialActivation(barId) {
+			if (!initialLifeline || !barId) return false;
+			return initialLifeline.activationBars.some(ab => ab.id === barId);
+		}
 		const classElement = initialLifeline?.matchedClassId;
 		const methodElement = flowWithImplicit[0]?.matchedMethodId;
 
@@ -891,6 +911,7 @@ Draw.loadPlugin(function(editorUi)
 
 		function animateReturn(msg, sourceLifeline, targetLifeline, allCells) {
 			const matchingCall = findMatchingCall(msg, allCells);
+			let initialActivationToClear = null;
 			if (!highlighted.has(msg.id)) { 								// highlight return sipky v SqD
 				highlightArrow(msg.id);
 			}
@@ -916,6 +937,9 @@ Draw.loadPlugin(function(editorUi)
 					removeInterDiagramLink(sourceLifeline.matchedClassId, sourceLifeline.id);
 				}
 			}
+			if (matchingCall.source && isInitialActivation(matchingCall.source) && highlighted.has(matchingCall.source)) {
+				initialActivationToClear = matchingCall.source;
+			}
 			const relation = findRelationBetweenClasses(targetLifeline.matchedClassId, sourceLifeline.matchedClassId);
 			if (relation && highlighted.has(relation.id)) {
 				unhighlight(relation.id);									// UNhighlight sipky medzi triedami v CD
@@ -939,10 +963,14 @@ Draw.loadPlugin(function(editorUi)
 				}			
 			}
 			wait();
+			if (initialActivationToClear) {
+				unhighlight(initialActivationToClear);
+			}
 		}
 
 		function animateImplicitReturn(msg, sourceLifeline, targetLifeline) {
 			const matchingCall = calls.find(c => c.id === msg.matchingCallId);
+			let initialActivationToClear = null;
 			if (!matchingCall) {
 				console.warn('[generateCustomAnim] No matching call found for implicit return');
 				return;
@@ -971,6 +999,9 @@ Draw.loadPlugin(function(editorUi)
 					removeInterDiagramLink(sourceLifeline.matchedClassId, sourceLifeline.id);
 				}
 			}
+			if (matchingCall.source && isInitialActivation(matchingCall.source) && highlighted.has(matchingCall.source)) {
+				initialActivationToClear = matchingCall.source;
+			}
 			const relation = findRelationBetweenClasses(targetLifeline?.matchedClassId, sourceLifeline?.matchedClassId);
 			if (relation && highlighted.has(relation.id)) {
 				unhighlight(relation.id);
@@ -987,6 +1018,9 @@ Draw.loadPlugin(function(editorUi)
 			}
 			stopReturnEdge(msg.source, msg.target);
 			wait();
+			if (initialActivationToClear) {
+				unhighlight(initialActivationToClear);
+			}
 		}
 
 		// Animate initial source lifeline block
