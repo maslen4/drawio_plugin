@@ -23,7 +23,7 @@ Draw.loadPlugin(function(editorUi)
 		const [lifelines, sqdMessages, fragments] = parseSequenceDiagram(sqdCells, cdCells, allCells);
 		const [cdClasses, cdRelations] = parseClassDiagram(sqdCells, cdCells);
 
-		var animationScript = buildAnimationScript(lifelines, sqdMessages, cdClasses, cdRelations, cdCells, allCells);
+		var animationScript = buildAnimationScript(lifelines, sqdMessages, fragments, cdClasses, cdRelations, cdCells, allCells);
 	
 		return animationScript;
 	}
@@ -278,10 +278,12 @@ Draw.loadPlugin(function(editorUi)
 					};
 					return childAreaMetadata;
 				}),
-				'parent': cell.parent
+				'parent': cell.parent,
+				'children': []
 			};
 			return fragment;
 		});
+
 
 		let allChildAreaIds = fragments.map(frag => frag['child_areas']).reduce((acc, v) => acc.concat(v), []).map(ca => ca['id']);
 		fragments.forEach(frag => {
@@ -316,6 +318,27 @@ Draw.loadPlugin(function(editorUi)
 			}
 		});
 
+
+		//adding children for every parent
+		for (let i = 0; i < fragments.length; i++) {
+			let parent = fragments[i];
+
+			for (let j = 0; j < fragments.length; j++) {
+				let child = fragments[j];
+
+				if (child.id === parent.id) continue;
+
+				if (
+					child.y >= parent.y &&
+					child.y <= parent.y + parent.height
+				) {
+					parent.children.push(child.id);
+				}
+			}
+}
+
+		console.log("FRAGMENTY", fragments);
+
 		return fragments;
 	}
 
@@ -323,9 +346,13 @@ Draw.loadPlugin(function(editorUi)
 	// SEQUENCE DIAGRAM PARSING
 	// ============================================================================
 
+
 	function parseSequenceDiagram(sqdCells, cdCells, allCells) {
 		// Extract lifelines from sqdCells
 		var lifelines = extractLifelines(sqdCells, allCells);
+		const activationBarIds = new Set(
+			lifelines.flatMap(lf => lf.activationBars.map(ab => ab.id))
+		);
 
 		// Match lifelines to classes by label 
 		lifelines.forEach(lf => {
@@ -334,6 +361,15 @@ Draw.loadPlugin(function(editorUi)
 				lf.matchedClassId = match.getAttribute("id");
 			}
 		});
+
+		function resolveActivationEndpoint(cell, attrName, coordinateName) {
+			const explicit = cell.getAttribute(attrName);
+			if (explicit && activationBarIds.has(explicit)) {
+				return explicit;
+			}
+			const estimated = estimateClosestActivationBar(cell, lifelines, coordinateName, allCells);
+			return estimated ? estimated.id : null;
+		}
 
 		// Extract messages/arrows (edge="1") from sqdCells
 		var messages = sqdCells.filter(cell =>
@@ -344,8 +380,8 @@ Draw.loadPlugin(function(editorUi)
 				id: cell.getAttribute("id"),
 				label: cell.getAttribute("value"),
 				parent: cell.getAttribute("parent"),
-				source: cell.getAttribute("source") || estimateClosestActivationBar(cell, lifelines, 'sourcePoint', allCells)['id'],
-				target: cell.getAttribute("target") || estimateClosestActivationBar(cell, lifelines, 'targetPoint', allCells)['id'],
+				source: resolveActivationEndpoint(cell, "source", "sourcePoint"),
+				target: resolveActivationEndpoint(cell, "target", "targetPoint"),
 				dashed: cell.getAttribute("style").includes("dashed=1"), // true / false
 				fragment: "",
 				fragmentParent: "",
@@ -364,13 +400,27 @@ Draw.loadPlugin(function(editorUi)
 					return subFragment.lines?.some(line => line.id === targetId);
 				}
 
-				fragment.child_areas.forEach(subFragment => {
-					if (isIdInFragmentLines(subFragment, msg.id)) {
-						msg.subFragment = subFragment.id;
+				// Check if message is inside this fragment's Y range
+				const msgY = msg.y;
+				const fragY = fragment.y;
+				const fragHeight = fragment.height;
+				if (msgY >= fragY && msgY <= (fragY + fragHeight)) {
+					// If fragment has child areas, assign to specific child area
+					if (fragment.child_areas.length > 0) {
+						fragment.child_areas.forEach(subFragment => {
+							if (isIdInFragmentLines(subFragment, msg.id)) {
+								msg.subFragment = subFragment.id;
+								msg.fragment = fragment.id;
+								msg.fragmentParent = fragment.parent;
+							}
+						})
+					} else {
+						// Fragment has no child areas: assign message directly to fragment
+						msg.subFragment = fragment.id;
 						msg.fragment = fragment.id;
 						msg.fragmentParent = fragment.parent;
 					}
-				})
+				}
 			})
 		})
 
@@ -576,7 +626,46 @@ Draw.loadPlugin(function(editorUi)
 	// ANIMATION SCRIPT BUILDING
 	// ============================================================================
 
-	function buildAnimationScript(lifelines, messages, cdClasses, cdRelations, cdCells, allCells) {
+	function fragmentIsChild(fragments, parentFragmentId, childFragmentId) {
+
+		if(parentFragmentId === "" || childFragmentId === "") return false;
+		const parentFragment = fragments.find(frag => frag.id === parentFragmentId);
+		return parentFragment.children.includes(childFragmentId);
+	}
+
+	function findParentFragment(fragments, fragmentId) {
+
+		let parentOfPreviousFragmentId = null;
+		fragments.forEach(frag => {
+			if (frag.children.includes(fragmentId)) {
+				parentOfPreviousFragmentId = frag.id;
+			}
+		});
+		return parentOfPreviousFragmentId;
+	}
+
+	//check if parent ends
+	function nestedFragmentsEnd(fragments, previousFragmentId, nextFragmentId) {
+		
+		const previousFragment = fragments.find(frag => frag.id === previousFragmentId);
+		const nextFragment = fragments.find(frag => frag.id === nextFragmentId);
+
+		//find a parent for a previous fragment
+
+		let parentOfPreviousFragmentId = findParentFragment(fragments, previousFragmentId);
+
+		//compare if next fragment is not the same as parent of previous fragment
+		if(parentOfPreviousFragmentId !== nextFragmentId){
+
+			console.log("nestedFragmentsEnd: previousFragmentId ", previousFragment, " nextFragment", nextFragment); 
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+
+	function buildAnimationScript(lifelines, messages, fragments, cdClasses, cdRelations, cdCells, allCells) {
 		// Build a map from source to messages for quick traversal
 		var sourceMap = new Map();
 		var targetSet = new Set();
@@ -807,9 +896,17 @@ Draw.loadPlugin(function(editorUi)
 			return animationScript;
 		}
 
-		const initialSource = flowWithImplicit[0]?.source;
+		let initialSource = flowWithImplicit[0]?.source;
+		if (!initialSource) {
+			const firstWithSource = flowWithImplicit.find(evt => evt.source);
+			initialSource = firstWithSource?.source || null;
+		}
 		const initialLifeline = initialSource ? findLifelineByBarId(initialSource) : null;
 		const initialActivationBar = initialSource || null;
+		function isInitialActivation(barId) {
+			if (!initialLifeline || !barId) return false;
+			return initialLifeline.activationBars.some(ab => ab.id === barId);
+		}
 		const classElement = initialLifeline?.matchedClassId;
 		const methodElement = flowWithImplicit[0]?.matchedMethodId;
 
@@ -830,9 +927,44 @@ Draw.loadPlugin(function(editorUi)
 
 		console.log(`fragmentMessages: ${fragmentMessages}`)
 
-		flowWithImplicit.forEach((msg) => {
+		// Helper to check if a fragment is a loop
+		function isLoopFragment(fragmentId) {
+			if (!fragmentId) return false;
+			const fragCell = allCells.find(c => c.id === fragmentId);
+			if (!fragCell) return false;
+			const label = (fragCell.label || '').toString().trim().toLowerCase();
+			return label === 'loop';
+		}
+
+		// Track which fragments we've processed to handle loop repeats
+		const processedFragments = new Map(); // fragmentId -> { startIndex, endIndex }
+		let currentFragmentId = null;
+		let currentFragmentStartLength = 0;
+
+		//remembering where fragments start
+		let fragmentStart = {};
+
+		flowWithImplicit.forEach((msg, msgIndex) => {
 			const sourceLifeline = findLifelineByBarId(msg.source);
 			const targetLifeline = findLifelineByBarId(msg.target);
+
+			// Track fragment boundaries for loop repetition
+			if (msg.fragment !== "" && msg.fragment !== currentFragmentId) {
+				// We're entering a new fragment
+				currentFragmentId = msg.fragment;
+
+				//remember where each fragment starts
+				if (fragmentStart[currentFragmentId] === undefined){
+					fragmentStart[currentFragmentId] = animationScript.length;
+				}
+
+				console.log("FRAHMENT START: ", fragmentStart);
+
+				currentFragmentStartLength = animationScript.length;
+			} else if (msg.fragment === "") {
+				// We've left a fragment
+				currentFragmentId = null;
+			}
 
 			if (msg.fragment !== "") { 
 				animateFragment(msg.fragment);
@@ -844,6 +976,41 @@ Draw.loadPlugin(function(editorUi)
 			} else if (returns.some(ret => ret.id === msg.id)) {
 				animateReturn(msg, sourceLifeline, targetLifeline, allCells);
 			}
+
+			// If this is the last message of a loop fragment, repeat 2 more times
+			const isLastMessageOfFragment = (msgIndex === flowWithImplicit.length - 1) || 
+											(flowWithImplicit[msgIndex + 1].fragment !== msg.fragment && !fragmentIsChild(fragments, msg.fragment, flowWithImplicit[msgIndex + 1].fragment) 
+										);
+
+			console.log(
+			`Message ${msg.label} is last of fragment ${msg.fragment}: ${isLastMessageOfFragment}, fragmentIsChild: ${
+				fragmentIsChild(fragments, msg.fragment, flowWithImplicit[msgIndex + 1]?.fragment)
+			}`
+			);
+
+			if (isLastMessageOfFragment && msg.fragment !== "" && isLoopFragment(msg.fragment)) {
+				// Capture the animation commands generated for this fragment
+				let fragmentCommands = animationScript.substring(fragmentStart[msg.fragment]);
+
+				// Append the same commands 2 more times for a total of 3 iterations
+				animationScript += fragmentCommands;
+				animationScript += fragmentCommands;
+				console.log(`[Loop Fragment] Repeated fragment ${msg.fragment} 3 times total, starting at ${fragmentStart[msg.fragment]} up to ${animationScript.length}`);
+				console.log("FRAGMENT COMMANDS:\n", fragmentCommands);
+			}
+
+			//edge case if parent and child fragment end at the same time (for example loop_02.2.drawio), then the last message of parent wouldn't be found, but need to be repeated as well
+			if (isLastMessageOfFragment && msg.fragment !== "" && flowWithImplicit[msgIndex + 1].fragment !== msg.fragment 
+				&& nestedFragmentsEnd(fragments, msg.fragment, flowWithImplicit[msgIndex + 1].fragment)){
+					let fragmentToEnd = findParentFragment(fragments, msg.fragment);
+					if(isLoopFragment(fragmentToEnd)){
+						fragmentCommands = animationScript.substring(fragmentStart[fragmentToEnd]);
+						animationScript += fragmentCommands;
+						animationScript += fragmentCommands;
+						console.log(`[Loop Fragment] Repeated fragment ${msg.fragment} 3 times total, starting at ${fragmentStart[msg.fragment]} up to ${animationScript.length}`);
+						console.log("FRAGMENT COMMANDS:\n", fragmentCommands);
+					}
+			}
 		});
 
 		// Animation step functions
@@ -854,6 +1021,9 @@ Draw.loadPlugin(function(editorUi)
 		}
 
 		function animateCall(msg, sourceLifeline, targetLifeline) {
+			if (msg.source && !highlighted.has(msg.source)) {
+				highlightCell(msg.source);
+			}
 			if (!highlighted.has(msg.id)) { 									// highlight sipky v SqD
 				highlightArrow(msg.id);
 			}
@@ -888,6 +1058,7 @@ Draw.loadPlugin(function(editorUi)
 
 		function animateReturn(msg, sourceLifeline, targetLifeline, allCells) {
 			const matchingCall = findMatchingCall(msg, allCells);
+			let initialActivationToClear = null;
 			if (!highlighted.has(msg.id)) { 								// highlight return sipky v SqD
 				highlightArrow(msg.id);
 			}
@@ -913,6 +1084,9 @@ Draw.loadPlugin(function(editorUi)
 					removeInterDiagramLink(sourceLifeline.matchedClassId, sourceLifeline.id);
 				}
 			}
+			if (matchingCall.source && isInitialActivation(matchingCall.source) && highlighted.has(matchingCall.source)) {
+				initialActivationToClear = matchingCall.source;
+			}
 			const relation = findRelationBetweenClasses(targetLifeline.matchedClassId, sourceLifeline.matchedClassId);
 			if (relation && highlighted.has(relation.id)) {
 				unhighlight(relation.id);									// UNhighlight sipky medzi triedami v CD
@@ -936,10 +1110,14 @@ Draw.loadPlugin(function(editorUi)
 				}			
 			}
 			wait();
+			if (initialActivationToClear) {
+				unhighlight(initialActivationToClear);
+			}
 		}
 
 		function animateImplicitReturn(msg, sourceLifeline, targetLifeline) {
 			const matchingCall = calls.find(c => c.id === msg.matchingCallId);
+			let initialActivationToClear = null;
 			if (!matchingCall) {
 				console.warn('[generateCustomAnim] No matching call found for implicit return');
 				return;
@@ -968,6 +1146,9 @@ Draw.loadPlugin(function(editorUi)
 					removeInterDiagramLink(sourceLifeline.matchedClassId, sourceLifeline.id);
 				}
 			}
+			if (matchingCall.source && isInitialActivation(matchingCall.source) && highlighted.has(matchingCall.source)) {
+				initialActivationToClear = matchingCall.source;
+			}
 			const relation = findRelationBetweenClasses(targetLifeline?.matchedClassId, sourceLifeline?.matchedClassId);
 			if (relation && highlighted.has(relation.id)) {
 				unhighlight(relation.id);
@@ -984,6 +1165,9 @@ Draw.loadPlugin(function(editorUi)
 			}
 			stopReturnEdge(msg.source, msg.target);
 			wait();
+			if (initialActivationToClear) {
+				unhighlight(initialActivationToClear);
+			}
 		}
 
 		// Animate initial source lifeline block
