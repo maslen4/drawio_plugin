@@ -1,0 +1,62 @@
+{
+  "classes": [
+    {
+      "BusinessAgreement": {
+        "methods": [
+          {
+            "Load": {
+              "parameters": [],
+              "returnType": "void"
+            }
+          }
+        ],
+        "attributes": [
+          {
+            "AgreementNumber": {
+              "type": "int"
+            }
+          },
+          {
+            "ExpirationDate": {
+              "type": "String"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "UserAccountInfo": {
+        "methods": [
+          {
+            "LoadBussinessAgreements": {
+              "parameters": [],
+              "returnType": "void"
+            }
+          }
+        ],
+        "attributes": [
+          {
+            "name": {
+              "type": "String"
+            }
+          },
+          {
+            "birthDate": {
+              "type": "String"
+            }
+          },
+          {
+            "agreementNumbers": {
+              "type": "int"
+            }
+          },
+          {
+            "Agreements": {
+              "type": "BusinessAgreement"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
