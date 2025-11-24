@@ -1,58 +1,28 @@
 {
   "classes": [
     {
-      "BusinessAgreement": {
-        "methods": [
-          {
-            "Load": {
-              "parameters": [],
-              "returnType": "void"
-            }
-          }
-        ],
-        "attributes": [
-          {
-            "AgreementNumber": {
-              "type": "int"
-            }
-          },
-          {
-            "ExpirationDate": {
-              "type": "String"
-            }
-          }
-        ]
+      "Dummy": {
+        "methods": [],
+        "attributes": []
       }
     },
     {
-      "UserAccountInfo": {
-        "methods": [
-          {
-            "LoadBussinessAgreements": {
-              "parameters": [],
-              "returnType": "void"
-            }
-          }
-        ],
+      "DistantClass": {
+        "methods": [],
         "attributes": [
           {
-            "name": {
-              "type": "String"
+            "distantAttribute": {
+              "type": "int[]"
             }
           },
           {
-            "birthDate": {
-              "type": "String"
+            "distantCharArray": {
+              "type": "char[]"
             }
           },
           {
-            "agreementNumbers": {
-              "type": "int"
-            }
-          },
-          {
-            "Agreements": {
-              "type": "BusinessAgreement"
+            "distantString": {
+              "type": "String[]"
             }
           }
         ]

@@ -20,47 +20,41 @@ function listJavaFiles(dir) {
 }
 
 function getTypeOfNode(node) {
-    //console.log(node);
     var fieldType = node;
+    var dims = "";
     if ("unannPrimitiveTypeWithOptionalDimsSuffix" in fieldType) { // It is a primitive type
-        fieldType = fieldType.unannPrimitiveTypeWithOptionalDimsSuffix[0].children.unannPrimitiveType[0].children;
+        fieldType = fieldType.unannPrimitiveTypeWithOptionalDimsSuffix[0].children;
+        if ("dims" in fieldType) {
+            dims = "[]";
+        }
+        fieldType = fieldType.unannPrimitiveType[0].children;
         if ("Boolean" in fieldType) {
             fieldType = fieldType.Boolean[0].image;  // <--- boolean type
         } else if ("numericType" in fieldType) {
             fieldType = fieldType.numericType[0].children;
             if ("integralType" in fieldType) {
-                fieldType = fieldType.integralType[0].children;
-                if ("Int" in fieldType) {
-                    fieldType = fieldType.Int[0].image;  // <--- int type
-                } else if ("Long" in fieldType) {
-                    fieldType = fieldType.Long[0].image;  // <--- long type
-                } else if ("Char" in fieldType) {
-                    fieldType = fieldType.Char[0].image;  // <--- char type
-                } else if ("Short" in fieldType) {
-                    fieldType = fieldType.Short[0].image;  // <--- short type
-                } else if ("Byte" in fieldType) {
-                    fieldType = fieldType.Byte[0].image;  // <--- byte type
-                } else {
-                    console.log("Unknown integral type");
-                }
-
+                fieldType = Object.keys(fieldType.integralType[0].children)[0].toLowerCase();
             } else if ("floatingPointType" in fieldType) {
-                fieldType = fieldType.floatingPointType[0].children;
-                if ("Float" in fieldType) {
-                    fieldType = fieldType.Float[0].image;  // <--- float type
-                } else if ("Double" in fieldType) {
-                    fieldType = fieldType.Double[0].image;  // <--- double type
-                } else {
-                    console.log("Unknown floating point type");
-                }
+                fieldType = Object.keys(fieldType.floatingPointType[0].children)[0].toLowerCase();
+            } else {
+                console.log("Unknown numeric type structure");
+                return "unknown";
             }
+        } else {
+            console.log("Unknown primitive type structure");
+            return "unknown";
         }
     } else if ("unannReferenceType" in fieldType) {  // <--- reference type (class/interface)
-        fieldType = fieldType.unannReferenceType[0].children.unannClassOrInterfaceType[0].children.unannClassType[0].children.Identifier[0].image;
+        fieldType = fieldType.unannReferenceType[0].children;
+        if ("dims" in fieldType) {
+            dims = "[]";
+        }
+        fieldType = fieldType.unannClassOrInterfaceType[0].children.unannClassType[0].children.Identifier[0].image;
     } else {
         console.log("Unknown field type structure");
+        return "Unknown type";
     }
-    return fieldType;
+    return fieldType + dims;
 }
 
 function getProjectJSON(ast) {
@@ -90,7 +84,6 @@ function getProjectJSON(ast) {
                 var paramListObj = node.children.methodHeader[0].children.methodDeclarator[0].children
                 if ("formalParameterList" in paramListObj){
                     paramListObj = paramListObj.formalParameterList[0].children.formalParameter;
-                    console.log(paramListObj);
                     paramListObj.forEach(element => {
                         var paramType = getTypeOfNode(element.children.variableParaRegularParameter[0].children.unannType[0].children);
                         var paramName = element.children.variableParaRegularParameter[0].children.variableDeclaratorId[0].children.Identifier[0].image;
@@ -102,7 +95,6 @@ function getProjectJSON(ast) {
             }
         }else if (node.name === "fieldDeclaration") {
             var fieldName = node.children.variableDeclaratorList[0].children.variableDeclarator[0].children.variableDeclaratorId[0].children.Identifier[0].image;
-            //console.log(node.children.unannType[0].children.unannPrimitiveTypeWithOptionalDimsSuffix[0].children.primitiveType);
             const fieldType = getTypeOfNode(node.children.unannType[0].children);            
 
             if (fieldName && fieldName.length > 0) {
@@ -123,7 +115,6 @@ function getProjectJSON(ast) {
     walk(ast);
 
     const json = JSON.stringify(output, null, 2);
-    //console.log(json);
     return json;
 }
 
@@ -156,15 +147,13 @@ function printAST(node, indent = 0) {
 
 
 // Usage
-const projectPath = "C:/Users/Legion/OneDrive/Desktop/skola/rocnik 5/ADIT/java-sample-mvc/src/Models";
+const projectPath = "C:/Users/Legion/OneDrive/Desktop/skola/rocnik 5/ADIT/java-sample-mvc/src/Other";
 const files = listJavaFiles(projectPath);
 
 var finalOutput = {classes: []};
 
 for (const file of files) {
-    //console.log(`Processing file: ${file}`);
     const code = fs.readFileSync(file, "utf8");
-    //console.log(`File content length: ${code.length} characters`);
     const ast = parse(code);
     //printAST(ast);
     const json = getProjectJSON(ast);
@@ -175,7 +164,7 @@ for (const file of files) {
 }
 
 finalOutput = JSON.stringify(finalOutput, null, 2);
-console.log(finalOutput);
+//console.log(finalOutput);
 fs.writeFileSync("JSONs/output.json", finalOutput, "utf8");
 
 
