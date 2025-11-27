@@ -1,0 +1,25 @@
+{
+  "name": "drawiorepo",
+  "version": "1.0.0",
+  "description": "This project provides a draw.io plugin that enables custom animations for diagrams, focusing on enhancing the visualization of Sequence Diagrams and their interaction with Class Diagrams. Users can define a sequence of animation steps to highlight elements, animate message flows, and dynamically show relationships between different diagram types.",
+  "main": "index.js",
+  "scripts": {
+  "build": "rollup -c",
+  "build:watch": "rollup -c --watch",
+  "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maslen4/drawio_plugin.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/maslen4/drawio_plugin/issues"
+  },
+  "homepage": "https://github.com/maslen4/drawio_plugin#readme",
+  "devDependencies": {
+    "rollup": "^4.53.3"
+  }
+}

@@ -1,0 +1,1227 @@
+/**
+ * Creates animation for class and sequence diagrams, animates arrows between classes
+ */
+Draw.loadPlugin(function(editorUi)
+{
+	// Constants
+	const FRAGMENT_TYPES = ['alt', 'opt', 'loop', 'par'];
+	const DEFAULT_WAIT_TIME = 1500;
+	const PROXIMITY_PADDING = 10;
+	const SEQUENCE_DIAGRAM_LAYER = "SqD";
+	const CLASS_DIAGRAM_LAYER = "CD";
+	
+	// Register menu resource
+	mxResources.parse('generateCustomAnim=Generate Custom Animation...');
+
+	// ============================================================================
+	// MAIN ANIMATION GENERATION
+	// ============================================================================
+
+	function generateAnimation() {
+		const { xmlDoc, sqdCells, cdCells, allCells } = parseDiagramXml(editorUi);
+		
+		const [lifelines, sqdMessages, fragments] = parseSequenceDiagram(sqdCells, cdCells, allCells);
+		const [cdClasses, cdRelations] = parseClassDiagram(sqdCells, cdCells);
+
+		var animationScript = buildAnimationScript(lifelines, sqdMessages, fragments, cdClasses, cdRelations, cdCells, allCells);
+	
+		return animationScript;
+	}
+
+	// ============================================================================
+	// XML PARSING AND DIAGRAM EXTRACTION
+	// ============================================================================
+
+	function parseDiagramXml(editorUi) {
+		var xml = editorUi.getFileData();
+		var parser = new DOMParser();
+		var xmlDoc = parser.parseFromString(xml, "text/xml");
+	       
+		console.log("parseDiagramXml: parsed XML document\n", xml);
+
+		var allCells = Array.from(xmlDoc.getElementsByTagName("mxCell"));
+
+		const sqdCells = getDiagramCells(allCells, SEQUENCE_DIAGRAM_LAYER);
+		const cdCells = getDiagramCells(allCells, CLASS_DIAGRAM_LAYER);
+
+		allCells = allCells.map(cell => {
+			return {
+				id: cell.getAttribute("id"),
+				raw: cell,
+				label: cell.getAttribute("value"),
+				parent: cell.getAttribute("parent"),
+				is_edge: cell.getAttribute('edge') === '1',
+				is_vertex: cell.getAttribute('vertex') === '1',
+				geometry: cell.getElementsByTagName("mxGeometry")[0],
+			};
+		});
+
+		return { xmlDoc, sqdCells, cdCells, allCells };
+	}
+
+	// ============================================================================
+	// GEOMETRY AND POSITION UTILITIES
+	// ============================================================================
+
+	function getClosestLifeline(activationBar, lifelines, allCells) {
+		let abCoordinates = {
+			'id': activationBar.id,
+			'x': activationBar.geometry.getAttribute('x'),
+			'y': activationBar.geometry.getAttribute('y'),
+			'width': parseFloat(activationBar.geometry.getAttribute('width')),
+			'height': parseFloat(activationBar.geometry.getAttribute('height'))
+		};
+
+		let abAbsoluteCoordinates = getAbsolutePosition(activationBar, allCells);
+		abCoordinates.x = abAbsoluteCoordinates.x;
+		abCoordinates.y = abAbsoluteCoordinates.y;
+
+		let abMiddlePoint = {
+			'x': abCoordinates.x + abCoordinates.width/2,
+			'y': abCoordinates.y + abCoordinates.height/2
+		};
+
+		let lifelinesCoordinates = lifelines.map(lf => {
+			let lfCoordinates = {
+				'id': lf.id,
+				'x': lf.geometry.getAttribute('x'),
+				'y': lf.geometry.getAttribute('y'),
+				'width': parseFloat(lf.geometry.getAttribute('width')),
+				'height': parseFloat(lf.geometry.getAttribute('height'))
+			};
+
+			let lfAbsoluteCoordinates = getAbsolutePosition(lf, allCells);
+			lfCoordinates.x = lfAbsoluteCoordinates.x;
+			lfCoordinates.y = lfAbsoluteCoordinates.y;
+
+			return lfCoordinates;
+		});
+
+		lifelinesCoordinates.sort((a, b) => {
+			const aDist = distanceOfLinePointAndActivationBar(abMiddlePoint, a);
+			const bDist = distanceOfLinePointAndActivationBar(abMiddlePoint, b);
+			return aDist - bDist;
+		});
+
+		return lifelinesCoordinates[0];
+	}
+
+	// ============================================================================
+	// LIFELINE EXTRACTION
+	// ============================================================================
+
+	function extractLifelines(sqdCells, allCells) {
+		var lifelines = sqdCells.filter(cell =>
+			cell.getAttribute("style") && cell.getAttribute("style").includes("shape=umlLifeline")
+		).map(cell => {
+			return {
+				id: cell.getAttribute("id"),
+				label: cell.getAttribute("value"),
+				parent: cell.getAttribute("parent"),
+				geometry: cell.getElementsByTagName("mxGeometry")[0],
+				activationBars: []
+			};
+		});
+
+		const activationBars
+			= allCells
+				.map(c => c.raw)
+				.filter(c =>
+					c.getAttribute("vertex") === "1" 
+					&& c.getAttribute("style").includes("targetShapes=umlLifeline")
+				)
+				.filter(c => {
+					const geoElem = c.getElementsByTagName("mxGeometry")[0];
+					if (!geoElem) return false;
+					const width = parseFloat(geoElem.getAttribute("width")) || 0;
+					const height = parseFloat(geoElem.getAttribute("height")) || 0;
+					return width > 0 && height > 0;
+				})
+				.map(c => {
+					const geoElem = c.getElementsByTagName("mxGeometry")[0];
+					const x = parseFloat(geoElem.getAttribute("x"));
+					const y = parseFloat(geoElem.getAttribute("y"));
+					const width = parseFloat(geoElem.getAttribute("width"));
+					const height = parseFloat(geoElem.getAttribute("height"));
+					return {
+						id: c.getAttribute("id"),
+						parent: c.getAttribute("parent"),
+						x: x,
+						y: y,
+						width: width,
+						height: height,
+						geometry: geoElem,
+						lifeline: null
+					};
+				});
+
+			activationBars.forEach(ab => {
+				ab.lifeline = getClosestLifeline(ab, lifelines, allCells).id;
+			});
+
+			lifelines.forEach(lf => {
+				lf.activationBars = activationBars.filter(ab => ab.lifeline === lf.id);
+			});
+
+		return lifelines;
+	}
+
+	// Helper to get absolute position of a cell by summing up parent geometries
+	function getAbsolutePosition(cell, diagramCells) {
+		let x = 0, y = 0;
+		let current = cell;
+		while (current) {
+			const geoElem = current.geometry;
+			if (geoElem) {
+				x += parseFloat(geoElem.getAttribute("x")) || 0;
+				y += parseFloat(geoElem.getAttribute("y")) || 0;
+			}
+			const parentId = current.parent;
+			if (!parentId || parentId === '0') break;
+			current = diagramCells.find(c => c.id === parentId);
+		}
+
+		return { x, y };
+	}
+
+	function getAbsolutePositionOfLine(cell, coordinates, diagramCells) {
+		let absolutePosition = { 'x': parseFloat(coordinates['x']), 'y': parseFloat(coordinates['y']) };
+
+		let parent_id = cell.parent || cell.getAttribute('parent');
+		let parent =  diagramCells.find(c => c.id === parent_id);
+		if (parent) {
+			let parentAbsolutePosition = getAbsolutePosition(parent, diagramCells);
+			absolutePosition['x'] = absolutePosition['x'] + parentAbsolutePosition['x'];
+			absolutePosition['y'] = absolutePosition['y'] + parentAbsolutePosition['y'];
+		}
+
+		return absolutePosition;
+	}
+
+
+	// Hinted by GPT - How do I calculate distance of a single point to the closest point of a rectangle?
+	function clamp(val, min, max) {
+		return Math.max(min, Math.min(max, val));
+	}
+
+	// Hinted by GPT - How do I calculate distance of a single point to the closest point of a rectangle?
+	function distanceOfLinePointAndActivationBar(linePointPosition, activationBarPosition){
+		let closestX = clamp(linePointPosition['x'], activationBarPosition['x'], activationBarPosition['x'] + activationBarPosition['width']);
+		let closestY = clamp(linePointPosition['y'], activationBarPosition['y'], activationBarPosition['y'] + activationBarPosition['height']);
+		let dx = linePointPosition['x'] - closestX;
+		let dy = linePointPosition['y'] - closestY;
+		let distance = Math.sqrt(dx * dx + dy * dy);
+		return distance;
+	}
+
+	function estimateClosestActivationBar(cell, lifelines, coordinateName, diagramCells) {
+		let closestActivationBar = null;
+		let absPositionOfCell = getAbsolutePositionOfLine(cell, getLineCoordinates(cell, coordinateName), diagramCells);
+
+		lifelines.forEach((lf) => {
+			lf.activationBars.forEach((ab) => {
+				if (!closestActivationBar) {
+					closestActivationBar = ab;
+				}
+				else {
+					let currentAbAbsolutePosition = getAbsolutePosition(ab, diagramCells);
+					currentAbAbsolutePosition['height'] = ab['height'];
+					currentAbAbsolutePosition['width'] = ab['width'];
+
+					let bestAbAbsolutePosition = getAbsolutePosition(closestActivationBar, diagramCells);
+					bestAbAbsolutePosition['height'] = closestActivationBar['height'];
+					bestAbAbsolutePosition['width'] = closestActivationBar['width'];
+
+					let distanceToCurrentActivationBar = distanceOfLinePointAndActivationBar(absPositionOfCell, currentAbAbsolutePosition);
+					let distanceToBestActivationBar = distanceOfLinePointAndActivationBar(absPositionOfCell, bestAbAbsolutePosition);
+
+					if (distanceToCurrentActivationBar < distanceToBestActivationBar) {
+						closestActivationBar = ab;
+					}
+				}
+			})
+		})
+
+		return closestActivationBar;
+	}
+
+	// ============================================================================
+	// FRAGMENT EXTRACTION
+	// ============================================================================
+
+	function getLineCoordinates(cell, coordinateName) {
+		const geometry = cell.getElementsByTagName('mxGeometry')[0];
+		const points = geometry.getElementsByTagName('mxPoint');
+		const coordinateCell = Array.from(points).find(el => el.getAttribute("as") === coordinateName);
+		return {
+			x: coordinateCell.getAttribute('x'),
+			y: coordinateCell.getAttribute('y')
+		};
+	}
+	
+	function extractFragmentsAndLinesHierarchy(allCells, messages) {
+		const fragCells = allCells.filter(cell => FRAGMENT_TYPES.includes(cell.label));
+		let fragments = fragCells.map(cell => {
+			let absPos = getAbsolutePosition(cell, allCells);
+			let fragment = {
+				'id': cell.id,
+				'value': cell.label,
+				'y': absPos['y'],
+				'height': parseFloat(cell.geometry.getAttribute('height')),
+				'child_areas': allCells.filter(ca => ca.parent === cell.id).map(ca => {
+					let childAreaMetadata = {
+						'id': ca.id,
+						'value': ca.label,
+						'y': getAbsolutePosition(ca, allCells)['y'],
+						'height': parseFloat(ca.geometry.getAttribute('height')),
+						'lines': []
+					};
+					return childAreaMetadata;
+				}),
+				'parent': cell.parent,
+				'children': []
+			};
+			return fragment;
+		});
+
+
+		let allChildAreaIds = fragments.map(frag => frag['child_areas']).reduce((acc, v) => acc.concat(v), []).map(ca => ca['id']);
+		fragments.forEach(frag => {
+			frag['parent'] = allChildAreaIds.includes(frag['parent']) ? frag['parent'] : null;
+		});
+
+		fragments.sort((a, b) => a.y - b.y);
+		messages.sort((a, b) => a.y - b.y);
+
+		messages.forEach(line => {
+			const lineY = line.y;
+			for(let i = fragments.length - 1; i >= 0; i--) {
+				const fragment = fragments[i];
+				const fragY = fragment.y;
+				const fragHeight = fragment.height;
+				if (lineY >= fragY && lineY <= (fragY + fragHeight)) {
+					const childAreas = fragment['child_areas'];
+					if (childAreas.length === 1) {
+						childAreas[0]['lines'].push(line);
+					} else if (childAreas.length === 2) {
+						const ca1 = childAreas[0];
+						const ca2 = childAreas[1];
+						const dividerY = ca2['y'];
+						if (lineY < dividerY) {
+							ca1['lines'].push(line);
+						} else {
+							ca2['lines'].push(line);
+						}
+					}
+					break;
+				}
+			}
+		});
+
+
+		//adding children for every parent
+		for (let i = 0; i < fragments.length; i++) {
+			let parent = fragments[i];
+
+			for (let j = 0; j < fragments.length; j++) {
+				let child = fragments[j];
+
+				if (child.id === parent.id) continue;
+
+				if (
+					child.y >= parent.y &&
+					child.y <= parent.y + parent.height
+				) {
+					parent.children.push(child.id);
+				}
+			}
+}
+
+		console.log("FRAGMENTY", fragments);
+
+		return fragments;
+	}
+
+	// ============================================================================
+	// SEQUENCE DIAGRAM PARSING
+	// ============================================================================
+
+
+	function parseSequenceDiagram(sqdCells, cdCells, allCells) {
+		// Extract lifelines from sqdCells
+		var lifelines = extractLifelines(sqdCells, allCells);
+		const activationBarIds = new Set(
+			lifelines.flatMap(lf => lf.activationBars.map(ab => ab.id))
+		);
+
+		// Match lifelines to classes by label 
+		lifelines.forEach(lf => {
+			const match = cdCells.find(cell => cell.getAttribute("value") && lf.label && lf.label.trim() === cell.getAttribute("value").trim());
+			if (match) {
+				lf.matchedClassId = match.getAttribute("id");
+			}
+		});
+
+		function resolveActivationEndpoint(cell, attrName, coordinateName) {
+			const explicit = cell.getAttribute(attrName);
+			if (explicit && activationBarIds.has(explicit)) {
+				return explicit;
+			}
+			const estimated = estimateClosestActivationBar(cell, lifelines, coordinateName, allCells);
+			return estimated ? estimated.id : null;
+		}
+
+		// Extract messages/arrows (edge="1") from sqdCells
+		var messages = sqdCells.filter(cell =>
+			cell.getAttribute("edge") === "1"
+		).map(cell => {
+			const targetPointY = getAbsolutePositionOfLine(cell, getLineCoordinates(cell, 'targetPoint'), allCells).y;
+			return {
+				id: cell.getAttribute("id"),
+				label: cell.getAttribute("value"),
+				parent: cell.getAttribute("parent"),
+				source: resolveActivationEndpoint(cell, "source", "sourcePoint"),
+				target: resolveActivationEndpoint(cell, "target", "targetPoint"),
+				dashed: cell.getAttribute("style").includes("dashed=1"), // true / false
+				fragment: "",
+				fragmentParent: "",
+				subFragment: "",
+				y: targetPointY
+			};
+		});
+
+
+		const fragments = extractFragmentsAndLinesHierarchy(allCells, messages);
+
+		// Add fragment reference to message/arrow
+		messages.forEach(msg => {
+			fragments.forEach(fragment => {
+				function isIdInFragmentLines(subFragment, targetId) {
+					return subFragment.lines?.some(line => line.id === targetId);
+				}
+
+				// Check if message is inside this fragment's Y range
+				const msgY = msg.y;
+				const fragY = fragment.y;
+				const fragHeight = fragment.height;
+				if (msgY >= fragY && msgY <= (fragY + fragHeight)) {
+					// If fragment has child areas, assign to specific child area
+					if (fragment.child_areas.length > 0) {
+						fragment.child_areas.forEach(subFragment => {
+							if (isIdInFragmentLines(subFragment, msg.id)) {
+								msg.subFragment = subFragment.id;
+								msg.fragment = fragment.id;
+								msg.fragmentParent = fragment.parent;
+							}
+						})
+					} else {
+						// Fragment has no child areas: assign message directly to fragment
+						msg.subFragment = fragment.id;
+						msg.fragment = fragment.id;
+						msg.fragmentParent = fragment.parent;
+					}
+				}
+			})
+		})
+
+		// Match messages to methods in matched class
+		messages.forEach(msg => {
+			const msgLabel = msg.label.replace(/\s*\([^)]*\)/, '').trim() // remove () from message label to match method name in a class
+
+			const match = cdCells.find(cell => cell.getAttribute("value") && msgLabel && cell.getAttribute("value").includes(msgLabel));
+			if (match) {
+				msg.matchedMethodId = match.getAttribute("id");
+			}
+		});
+
+		// Add position of source and target lifeline block to message/arrow 
+		messages.forEach(msg => {
+			const cell = sqdCells.find(c => c.getAttribute("id") === msg.id);
+			const geometry = cell.getElementsByTagName("mxGeometry")[0];
+			const mxPoints = geometry.getElementsByTagName("mxPoint");
+
+			let sourcePointElem = null;
+			let targetPointElem = null;
+
+			for (let i = 0; i < mxPoints.length; i++) {
+				const asAttr = mxPoints[i].getAttribute("as");
+				if (asAttr === "sourcePoint") sourcePointElem = mxPoints[i];
+				if (asAttr === "targetPoint") targetPointElem = mxPoints[i];
+			}
+
+			let sourcePoint = sourcePointElem ? {
+				x: parseFloat(sourcePointElem.getAttribute("x")),
+				y: parseFloat(sourcePointElem.getAttribute("y"))
+			} : null;
+
+			let targetPoint = targetPointElem ? {
+				x: parseFloat(targetPointElem.getAttribute("x")),
+				y: parseFloat(targetPointElem.getAttribute("y"))
+			} : null;
+
+			msg.sourcePoint = sourcePoint;
+			msg.targetPoint = targetPoint;
+		});
+
+		console.log("Lifelines:", lifelines);
+		console.log("Messages/Arrows:", messages);
+		console.log("Fragments (alt/loop/opt):", fragments);
+
+		return [lifelines, messages, fragments];
+	}
+
+	// ============================================================================
+	// CLASS DIAGRAM PARSING
+	// ============================================================================
+
+	function parseClassDiagram(sqdCells, cdCells) {
+		// Find the CD layer id (parent for all class elements)
+		const cdLayer = cdCells.find(cell => cell.getAttribute("value") === CLASS_DIAGRAM_LAYER);
+		const cdLayerId = cdLayer ? cdLayer.getAttribute("id") : null;
+		if (!cdLayerId) return;
+
+		// Find all class elements whose parent is cdLayerId
+		const classes = cdCells
+		.filter(cell =>
+			cell.getAttribute("parent") === cdLayerId &&
+			cell.getAttribute("vertex") === "1"
+		)
+		.map(cell => {
+			const id = cell.getAttribute("id");
+			const children = cdCells
+				.filter(child => child.getAttribute("parent") === id)
+				.map(child => child.getAttribute("id"));
+
+			return {
+				id,
+				label: cell.getAttribute("value"),
+				parent: cell.getAttribute("parent"),
+				children,
+				geometry: cell.getElementsByTagName("mxGeometry")[0],
+			};
+		});
+		console.log("classes");
+		console.log(classes);
+
+		// Helper to check if a point is inside a class with optional padding
+		function pointInClass(point, classRect, padding = PROXIMITY_PADDING) {
+			return point.x >= classRect.x - padding &&
+				point.x <= classRect.x + classRect.width + padding &&
+				point.y >= classRect.y - padding &&
+				point.y <= classRect.y + classRect.height + padding;
+		}
+
+		// Extract arrows (edges) from class diagram
+		var classArrows = cdCells.filter(cell =>
+			cell.getAttribute("edge") === "1"
+		).map(cell => {
+			const geometry = cell.getElementsByTagName("mxGeometry")[0];
+			let sourcePoint = null;
+			let targetPoint = null;
+
+			if (geometry) {
+				const mxPoints = geometry.getElementsByTagName("mxPoint");
+				for (let i = 0; i < mxPoints.length; i++) {
+					const asAttr = mxPoints[i].getAttribute("as");
+					if (asAttr === "sourcePoint") sourcePoint = {
+						x: parseFloat(mxPoints[i].getAttribute("x")),
+						y: parseFloat(mxPoints[i].getAttribute("y"))
+					};
+					if (asAttr === "targetPoint") targetPoint = {
+						x: parseFloat(mxPoints[i].getAttribute("x")),
+						y: parseFloat(mxPoints[i].getAttribute("y"))
+					};
+				}
+			}
+
+			let source = cell.getAttribute("source");
+			let target = cell.getAttribute("target");
+
+			// If source or target not found by id, try to find by proximity to arrow endpoints
+			if ((!source || !target) && (sourcePoint && targetPoint)) {
+				for (const classElem of classes) {
+					const geoElem = classElem.geometry;
+					if (!geoElem) continue;
+					const absPos = getAbsolutePosition(classElem, cdCells);
+					const classRect = {
+						x: absPos.x,
+						y: absPos.y,
+						width: parseFloat(geoElem.getAttribute("width")) || 0,
+						height: parseFloat(geoElem.getAttribute("height")) || 0
+					};
+
+					if (!source && pointInClass(sourcePoint, classRect)) {
+						source = classElem.id;
+					}
+					if (!target && pointInClass(targetPoint, classRect)) {
+						target = classElem.id;
+					}
+					if (source && target) break;
+				}
+			}
+
+			return {
+				id: cell.getAttribute("id"),
+				label: cell.getAttribute("value"),
+				parent: cell.getAttribute("parent"),
+				source: source,
+				target: target
+			};
+		});
+
+		console.log("CD classes:\n", classes);
+		console.log("CD relations:\n", classArrows);
+
+		return [classes, classArrows];
+	}
+
+	// Get all elements in diagramType (= SqD / CD) layer
+	function getDiagramCells(cells, diagramType) {
+		const layer = cells.find(cell => cell.getAttribute("value") === diagramType);
+		if (!layer) {
+			console.error(`No diagram layer for ${diagramType} found in XML.`);
+			return [];
+		}
+		const layerId = layer.getAttribute("id");
+		const descendantIds = new Set();
+		function collectDescendants(parentId) {
+			cells.forEach(cell => {
+				if (cell.getAttribute("parent") === parentId) {
+					const id = cell.getAttribute("id");
+					if (!descendantIds.has(id)) {
+						descendantIds.add(id);
+						collectDescendants(id);
+					}
+				}
+			});
+		}
+		collectDescendants(layerId);
+
+		return cells.filter(cell => {
+			// Always include the layer itself
+			if (cell.getAttribute("id") === layerId) {
+				return true;
+			}
+
+			// Only process descendants
+			if (!descendantIds.has(cell.getAttribute("id"))) {
+				return false;
+			}
+
+			// Check visibility
+			const isVisible = cell.getAttribute("visible") !== "0";
+
+			// Check dimensions
+			const geoElem = cell.getElementsByTagName("mxGeometry")[0];
+			const hasPositiveDimensions = geoElem &&
+				parseFloat(geoElem.getAttribute("width")) > 0 &&
+				parseFloat(geoElem.getAttribute("height")) > 0;
+
+			// Filter based on the condition: visible OR has positive dimensions
+			return isVisible || hasPositiveDimensions;
+		});
+	}
+
+	// ============================================================================
+	// ANIMATION SCRIPT BUILDING
+	// ============================================================================
+
+	function fragmentIsChild(fragments, parentFragmentId, childFragmentId) {
+
+		if(parentFragmentId === "" || childFragmentId === "") return false;
+		const parentFragment = fragments.find(frag => frag.id === parentFragmentId);
+		return parentFragment.children.includes(childFragmentId);
+	}
+
+	function findParentFragment(fragments, fragmentId) {
+
+		let parentOfPreviousFragmentId = null;
+		fragments.forEach(frag => {
+			if (frag.children.includes(fragmentId)) {
+				parentOfPreviousFragmentId = frag.id;
+			}
+		});
+		return parentOfPreviousFragmentId;
+	}
+
+	//check if parent ends
+	function nestedFragmentsEnd(fragments, previousFragmentId, nextFragmentId) {
+		
+		const previousFragment = fragments.find(frag => frag.id === previousFragmentId);
+		const nextFragment = fragments.find(frag => frag.id === nextFragmentId);
+
+		//find a parent for a previous fragment
+
+		let parentOfPreviousFragmentId = findParentFragment(fragments, previousFragmentId);
+
+		//compare if next fragment is not the same as parent of previous fragment
+		if(parentOfPreviousFragmentId !== nextFragmentId){
+
+			console.log("nestedFragmentsEnd: previousFragmentId ", previousFragment, " nextFragment", nextFragment); 
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+
+	function buildAnimationScript(lifelines, messages, fragments, cdClasses, cdRelations, cdCells, allCells) {
+		// Build a map from source to messages for quick traversal
+		var sourceMap = new Map();
+		var targetSet = new Set();
+
+		messages.forEach(msg => {
+			if (!sourceMap.has(msg.source)) {
+				sourceMap.set(msg.source, []);
+			}
+			sourceMap.get(msg.source).push(msg);
+			if (msg.target) {
+				targetSet.add(msg.target);
+			}
+		});
+
+		var calls = messages.filter(msg => {
+			return !msg.dashed;
+		});
+		var returns = messages.filter(msg => {
+			return msg.dashed;
+		}) ;
+		
+		console.log("Calls", calls);
+		console.log("Returns", returns);
+
+		// Traverse the flow in global vertical order, including backward arrows
+		var flow = [];
+		var visited = new Set();
+
+		// Collect all messages with valid sourcePoint and targetPoint, sort by y (top to bottom)
+		var sortedMessages = messages
+			.filter(msg => msg.sourcePoint && msg.targetPoint)
+			.sort((a, b) => {
+				return a.y - b.y
+			});
+
+			
+		const fragmentMessages = new Map(); // key: fragmentId, value: Set of messageIds
+		const firstSubFragmentMap = new Map(); // key: fragmentId, value: firstSubFragmentId
+		
+		sortedMessages.forEach(msg => {
+			if (visited.has(msg.id)) return;
+
+			if (msg.fragment !== "") {
+				if (!fragmentMessages.has(msg.fragment)) {
+					fragmentMessages.set(msg.fragment, new Set());
+					firstSubFragmentMap.set(msg.fragment, msg.subFragment);
+				}
+
+				// Only save messages if they're in the first subfragment for this fragment
+				if (msg.subFragment === firstSubFragmentMap.get(msg.fragment)) {
+					fragmentMessages.get(msg.fragment).add(msg.id);
+
+					flow.push({
+						id: msg.id,
+						label: msg.label,
+						matchedMethodId: msg.matchedMethodId,
+						source: msg.source,
+						target: msg.target,
+						fragment: msg.fragment,
+						subFragment: msg.subFragment,
+						type: (msg.dashed ? 'return' : 'call')
+					});
+				}
+
+				visited.add(msg.id);
+			} else {
+				flow.push({
+					id: msg.id,
+					label: msg.label,
+					matchedMethodId: msg.matchedMethodId,
+					source: msg.source,
+					target: msg.target,
+					fragment: msg.fragment,
+					subFragment: msg.subFragment,
+					type: (msg.dashed ? 'return' : 'call')
+				});
+				visited.add(msg.id);
+			}
+		});
+
+		var flowWithImplicit = [];
+		var callStack = [];
+		flow.forEach((evt) => {
+			const isCall = evt.type === 'call' || (!evt.type && calls.some(c => c.id === evt.id));
+			const isReturn = evt.type === 'return' || (!evt.type && returns.some(r => r.id === evt.id));
+
+			if (isCall) {
+				while (callStack.length > 0 && callStack[callStack.length - 1].target !== evt.source) {
+					const toClose = callStack.pop();
+					flowWithImplicit.push({
+						id: null,
+						label: `implicit return for ${toClose.label || toClose.id}`,
+						matchedMethodId: toClose.matchedMethodId,
+						source: toClose.target,
+						target: toClose.source,
+						fragment: toClose.fragment,
+						subFragment: toClose.subFragment,
+						matchingCallId: toClose.id,
+						type: 'implicitReturn'
+					});
+				}
+
+				flowWithImplicit.push(evt);
+				callStack.push(evt);
+			} else if (isReturn) {
+				while (callStack.length > 0 && !(callStack[callStack.length - 1].source === evt.target && callStack[callStack.length - 1].target === evt.source)) {
+					const toClose = callStack.pop();
+					flowWithImplicit.push({
+						id: null,
+						label: `implicit return for ${toClose.label || toClose.id}`,
+						matchedMethodId: toClose.matchedMethodId,
+						source: toClose.target,
+						target: toClose.source,
+						fragment: toClose.fragment,
+						subFragment: toClose.subFragment,
+						matchingCallId: toClose.id,
+						type: 'implicitReturn'
+					});
+				}
+
+				flowWithImplicit.push(evt);
+				if (callStack.length > 0 && callStack[callStack.length - 1].source === evt.target && callStack[callStack.length - 1].target === evt.source) {
+					callStack.pop();
+				}
+			} else {
+				flowWithImplicit.push(evt);
+			}
+		});
+
+		while (callStack.length > 0) {
+			const toClose = callStack.pop();
+			flowWithImplicit.push({
+				id: null,
+				label: `implicit return for ${toClose.label || toClose.id}`,
+				matchedMethodId: toClose.matchedMethodId,
+				source: toClose.target,
+				target: toClose.source,
+				fragment: toClose.fragment,
+				subFragment: toClose.subFragment,
+				matchingCallId: toClose.id,
+				type: 'implicitReturn'
+			});
+		}
+
+		console.log("Sequence Flow (ordered):", flowWithImplicit);
+		flowWithImplicit.forEach((msg, idx) => {
+			console.log(
+				`Step ${idx + 1}: [${msg.id || msg.type}] "${msg.label}" from ${msg.source || "?"} to ${msg.target || "?"}`
+			);
+		});
+
+		let animationScript = "";
+		const highlighted = new Set();
+
+		function findLifelineByBarId(barId) { 
+			const found = lifelines.find(lf => lf.activationBars.some(b => b.id === barId));
+			if (!found) {
+				console.warn("[generateCustomAnim] buildAnimationScript: No lifeline found for barId", barId);
+				return null;
+			}
+			return found;
+		}
+		
+		// Helper to find a call for a return arrow
+		function findMatchingCall(msg, allCells) {
+			if (!msg.source || !msg.target) return null;
+
+			const rawMsg = allCells.find(c => c.id === msg.id).raw;
+			const returnLine = {
+				id: msg.id,
+				y: getAbsolutePositionOfLine(rawMsg, getLineCoordinates(rawMsg, "targetPoint"), allCells).y
+			};
+
+			const reversed = calls
+				.filter(call => call.source === msg.target && call.target === msg.source)
+				.map(call => {
+					const rawCall = allCells.find(c => c.id === call.id).raw;
+					return {
+						id: call.id,
+						y: getAbsolutePositionOfLine(rawCall, getLineCoordinates(rawCall, "targetPoint"), allCells).y
+					};
+				});
+			if (reversed.length === 0) return null;
+
+			const above = reversed.filter(call => call.y < returnLine.y);
+			if (above.length === 0) return null;
+
+			above.sort((a, b) => a.y - b.y);
+
+			const matchingCallId = above[above.length - 1].id;
+			const matchingCall = calls.find(call => call.id === matchingCallId);
+			return matchingCall;
+		}
+
+		// Animation command helpers
+		function highlightCell(id) {
+			animationScript += `animate ${id}\n`;
+			highlighted.add(id);
+		}
+		function highlightArrow(id) {
+			animationScript += `roll ${id}\n`;
+			highlighted.add(id);
+		}
+		function unhighlight(id) {
+			animationScript += `hide ${id}\n`;
+			highlighted.delete(id);
+		}
+		function wait(ms = DEFAULT_WAIT_TIME) {
+			animationScript += `wait ${ms}\n`;
+		}
+		function addInterDiagramLink(sourceId, targetId) {
+			animationScript += `add ${sourceId} ${targetId}\n`;
+		}
+		function removeInterDiagramLink(sourceId, targetId) {
+			animationScript += `remove ${sourceId} ${targetId}\n`;
+		}
+		function startReturnEdge(sourceId, targetId) {
+			animationScript += `ret ${sourceId} ${targetId} start\n`;
+		}
+		function stopReturnEdge(sourceId, targetId) {
+			animationScript += `ret ${sourceId} ${targetId} stop\n`;
+		}
+
+
+		// Guard against empty flows or missing lookups
+		if (!flowWithImplicit || flowWithImplicit.length === 0) {
+			console.warn('[generateCustomAnim] Empty flow; returning empty animation script');
+			return animationScript;
+		}
+
+		let initialSource = flowWithImplicit[0]?.source;
+		if (!initialSource) {
+			const firstWithSource = flowWithImplicit.find(evt => evt.source);
+			initialSource = firstWithSource?.source || null;
+		}
+		const initialLifeline = initialSource ? findLifelineByBarId(initialSource) : null;
+		const initialActivationBar = initialSource || null;
+		function isInitialActivation(barId) {
+			if (!initialLifeline || !barId) return false;
+			return initialLifeline.activationBars.some(ab => ab.id === barId);
+		}
+		const classElement = initialLifeline?.matchedClassId;
+		const methodElement = flowWithImplicit[0]?.matchedMethodId;
+
+		// Animate initial lifeline and activation bar
+		if (initialLifeline?.id && !highlighted.has(initialLifeline.id)) {
+			highlightCell(initialLifeline.id);
+		}
+		if (initialActivationBar && !highlighted.has(initialActivationBar)) {
+			highlightCell(initialActivationBar);
+		}
+		if (classElement && !highlighted.has(classElement)) {
+			highlightCell(classElement);
+		}
+		if (methodElement && !highlighted.has(methodElement)) {
+			highlightCell(methodElement);
+		}
+		wait();
+
+		console.log(`fragmentMessages: ${fragmentMessages}`)
+
+		// Helper to check if a fragment is a loop
+		function isLoopFragment(fragmentId) {
+			if (!fragmentId) return false;
+			const fragCell = allCells.find(c => c.id === fragmentId);
+			if (!fragCell) return false;
+			const label = (fragCell.label || '').toString().trim().toLowerCase();
+			return label === 'loop';
+		}
+
+		// Track which fragments we've processed to handle loop repeats
+		const processedFragments = new Map(); // fragmentId -> { startIndex, endIndex }
+		let currentFragmentId = null;
+		let currentFragmentStartLength = 0;
+
+		//remembering where fragments start
+		let fragmentStart = {};
+
+		flowWithImplicit.forEach((msg, msgIndex) => {
+			const sourceLifeline = findLifelineByBarId(msg.source);
+			const targetLifeline = findLifelineByBarId(msg.target);
+
+			// Track fragment boundaries for loop repetition
+			if (msg.fragment !== "" && msg.fragment !== currentFragmentId) {
+				// We're entering a new fragment
+				currentFragmentId = msg.fragment;
+
+				//remember where each fragment starts
+				if (fragmentStart[currentFragmentId] === undefined){
+					fragmentStart[currentFragmentId] = animationScript.length;
+				}
+
+				console.log("FRAHMENT START: ", fragmentStart);
+
+				currentFragmentStartLength = animationScript.length;
+			} else if (msg.fragment === "") {
+				// We've left a fragment
+				currentFragmentId = null;
+			}
+
+			if (msg.fragment !== "") { 
+				animateFragment(msg.fragment);
+			}
+			if (msg.type === 'implicitReturn') {
+				animateImplicitReturn(msg, sourceLifeline, targetLifeline);
+			} else if (calls.some(call => call.id === msg.id)) {
+				animateCall(msg, sourceLifeline, targetLifeline);
+			} else if (returns.some(ret => ret.id === msg.id)) {
+				animateReturn(msg, sourceLifeline, targetLifeline, allCells);
+			}
+
+			// If this is the last message of a loop fragment, repeat 2 more times
+			const isLastMessageOfFragment = (msgIndex === flowWithImplicit.length - 1) || 
+											(flowWithImplicit[msgIndex + 1].fragment !== msg.fragment && !fragmentIsChild(fragments, msg.fragment, flowWithImplicit[msgIndex + 1].fragment) 
+										);
+
+			console.log(
+			`Message ${msg.label} is last of fragment ${msg.fragment}: ${isLastMessageOfFragment}, fragmentIsChild: ${
+				fragmentIsChild(fragments, msg.fragment, flowWithImplicit[msgIndex + 1]?.fragment)
+			}`
+			);
+
+			if (isLastMessageOfFragment && msg.fragment !== "" && isLoopFragment(msg.fragment)) {
+				// Capture the animation commands generated for this fragment
+				let fragmentCommands = animationScript.substring(fragmentStart[msg.fragment]);
+
+				// Append the same commands 2 more times for a total of 3 iterations
+				animationScript += fragmentCommands;
+				animationScript += fragmentCommands;
+				console.log(`[Loop Fragment] Repeated fragment ${msg.fragment} 3 times total, starting at ${fragmentStart[msg.fragment]} up to ${animationScript.length}`);
+				console.log("FRAGMENT COMMANDS:\n", fragmentCommands);
+			}
+
+			//edge case if parent and child fragment end at the same time (for example loop_02.2.drawio), then the last message of parent wouldn't be found, but need to be repeated as well
+			if (isLastMessageOfFragment && msg.fragment !== "" && flowWithImplicit[msgIndex + 1].fragment !== msg.fragment 
+				&& nestedFragmentsEnd(fragments, msg.fragment, flowWithImplicit[msgIndex + 1].fragment)){
+					let fragmentToEnd = findParentFragment(fragments, msg.fragment);
+					if(isLoopFragment(fragmentToEnd)){
+						fragmentCommands = animationScript.substring(fragmentStart[fragmentToEnd]);
+						animationScript += fragmentCommands;
+						animationScript += fragmentCommands;
+						console.log(`[Loop Fragment] Repeated fragment ${msg.fragment} 3 times total, starting at ${fragmentStart[msg.fragment]} up to ${animationScript.length}`);
+						console.log("FRAGMENT COMMANDS:\n", fragmentCommands);
+					}
+			}
+		});
+
+		// Animation step functions
+		function animateFragment(fragment) {
+			if (!highlighted.has(fragment)) {
+				highlightCell(fragment);
+			}			
+		}
+
+		function animateCall(msg, sourceLifeline, targetLifeline) {
+			if (msg.source && !highlighted.has(msg.source)) {
+				highlightCell(msg.source);
+			}
+			if (!highlighted.has(msg.id)) { 									// highlight sipky v SqD
+				highlightArrow(msg.id);
+			}
+			if (sourceLifeline.matchedClassId && !highlighted.has(sourceLifeline.matchedClassId)) { // highlight source triedy v CD
+				highlightCell(sourceLifeline.matchedClassId);
+			}
+			if (msg.matchedMethodId && !highlighted.has(msg.matchedMethodId)) { // highlight metody v CD
+				highlightCell(msg.matchedMethodId);
+			}
+			if (msg.matchedMethodId && msg.id) {								// zlta sipka medzi metodou v CD a sipkou v SqD
+				addInterDiagramLink(msg.matchedMethodId, msg.id);
+			}
+			const relation = findRelationBetweenClasses(sourceLifeline.matchedClassId, targetLifeline.matchedClassId);
+			if (relation && !highlighted.has(relation.id)) { 					// highlight sipky medzi triedami v CD
+				highlightArrow(relation.id);
+			}
+			wait();
+			if (targetLifeline.id && !highlighted.has(targetLifeline.id)) {		// highlight lifeline bloku v SqD
+				highlightCell(targetLifeline.id);
+			}
+			if (msg.target && !highlighted.has(msg.target)) {					// highlight lifeline bloku v SqD
+				highlightCell(msg.target);
+			}
+			if (targetLifeline.matchedClassId && !highlighted.has(targetLifeline.matchedClassId)) { // highlight target triedy v CD
+				highlightCell(targetLifeline.matchedClassId);
+			}
+			if (targetLifeline.matchedClassId && targetLifeline.id) { 			// zlta sipka medzi triedou v CD a lifeline blokom v SqD
+				addInterDiagramLink(targetLifeline.matchedClassId, targetLifeline.id);
+			}
+			wait();
+		}
+
+		function animateReturn(msg, sourceLifeline, targetLifeline, allCells) {
+			const matchingCall = findMatchingCall(msg, allCells);
+			let initialActivationToClear = null;
+			if (!highlighted.has(msg.id)) { 								// highlight return sipky v SqD
+				highlightArrow(msg.id);
+			}
+			wait();
+			if (matchingCall.matchedMethodId && highlighted.has(matchingCall.matchedMethodId)) { // UNhighlight metody v CD
+				unhighlight(matchingCall.matchedMethodId);
+			}
+			if (matchingCall.id && highlighted.has(matchingCall.id)) { 		// UNhighlight sipky ktora predstavuje volanie metody v SqD 
+				unhighlight(matchingCall.id);
+			}
+			if (matchingCall.matchedMethodId && matchingCall.id) { 			// zmaze zltu sipku medzi metodou v CD a sipkou v SqD
+				removeInterDiagramLink(matchingCall.matchedMethodId, matchingCall.id);
+			}
+			if (msg.source && highlighted.has(msg.source)) { 				// UNhighlight activation baru v SqD
+				unhighlight(msg.source);
+			}
+			if (sourceLifeline.id && highlighted.has(sourceLifeline.id) && !hasHighlightedActivationBar(sourceLifeline.id)) { 	// UNhighlight lifeline bloku v SqD
+				unhighlight(sourceLifeline.id);
+			}
+			if (sourceLifeline.matchedClassId && !highlighted.has(sourceLifeline.id) && !hasHighlightedMethod(sourceLifeline.matchedClassId)) { // UNhighlight triedy v CD ak nesvieti lifeline blok a nema ziadnu vysvietenu metodu
+				unhighlight(sourceLifeline.matchedClassId);
+				if (sourceLifeline.matchedClassId && sourceLifeline.id) { 	// zmaze zltu sipku medzi triedou v CD a lifeline blokom v SqD
+					removeInterDiagramLink(sourceLifeline.matchedClassId, sourceLifeline.id);
+				}
+			}
+			if (matchingCall.source && isInitialActivation(matchingCall.source) && highlighted.has(matchingCall.source)) {
+				initialActivationToClear = matchingCall.source;
+			}
+			const relation = findRelationBetweenClasses(targetLifeline.matchedClassId, sourceLifeline.matchedClassId);
+			if (relation && highlighted.has(relation.id)) {
+				unhighlight(relation.id);									// UNhighlight sipky medzi triedami v CD
+			}
+			if (highlighted.has(msg.id)) { 									// UNhighlight return sipky v SqD
+				unhighlight(msg.id);
+			}
+			if (msg.fragment !== "" && highlighted.has(msg.fragment)) {
+				console.log(`has fragment ${msg.fragment}, pop msg.id ${msg.id}`)
+				console.log(fragmentMessages.get(msg.fragment))
+				if (matchingCall.id) {
+					fragmentMessages.get(msg.fragment).delete(matchingCall.id);
+				}
+				if (fragmentMessages.get(msg.fragment).delete(msg.id)) { 
+					console.log(fragmentMessages.get(msg.fragment))
+					if (fragmentMessages.get(msg.fragment).size === 0) {
+						fragmentMessages.delete(msg.fragment);
+						unhighlight(msg.fragment)
+						console.log("HIDE FRAG")
+					}
+				}			
+			}
+			wait();
+			if (initialActivationToClear) {
+				unhighlight(initialActivationToClear);
+			}
+		}
+
+		function animateImplicitReturn(msg, sourceLifeline, targetLifeline) {
+			const matchingCall = calls.find(c => c.id === msg.matchingCallId);
+			let initialActivationToClear = null;
+			if (!matchingCall) {
+				console.warn('[generateCustomAnim] No matching call found for implicit return');
+				return;
+			}
+			// Draw dashed return edge briefly, then unwind highlights/state
+			startReturnEdge(msg.source, msg.target);
+			wait();
+			if (matchingCall.matchedMethodId && highlighted.has(matchingCall.matchedMethodId)) {
+				unhighlight(matchingCall.matchedMethodId);
+			}
+			if (matchingCall.id && highlighted.has(matchingCall.id)) {
+				unhighlight(matchingCall.id);
+			}
+			if (matchingCall.matchedMethodId && matchingCall.id) {
+				removeInterDiagramLink(matchingCall.matchedMethodId, matchingCall.id);
+			}
+			if (msg.source && highlighted.has(msg.source)) {
+				unhighlight(msg.source);
+			}
+			if (sourceLifeline?.id && highlighted.has(sourceLifeline.id) && !hasHighlightedActivationBar(sourceLifeline.id)) {
+				unhighlight(sourceLifeline.id);
+			}
+			if (sourceLifeline?.matchedClassId && (!sourceLifeline.id || !highlighted.has(sourceLifeline.id)) && !hasHighlightedMethod(sourceLifeline.matchedClassId)) {
+				unhighlight(sourceLifeline.matchedClassId);
+				if (sourceLifeline.matchedClassId && sourceLifeline.id) {
+					removeInterDiagramLink(sourceLifeline.matchedClassId, sourceLifeline.id);
+				}
+			}
+			if (matchingCall.source && isInitialActivation(matchingCall.source) && highlighted.has(matchingCall.source)) {
+				initialActivationToClear = matchingCall.source;
+			}
+			const relation = findRelationBetweenClasses(targetLifeline?.matchedClassId, sourceLifeline?.matchedClassId);
+			if (relation && highlighted.has(relation.id)) {
+				unhighlight(relation.id);
+			}
+			if (msg.fragment !== "" && highlighted.has(msg.fragment)) {
+				if (matchingCall.id) {
+					fragmentMessages.get(msg.fragment)?.delete(matchingCall.id);
+				}
+				const setRef = fragmentMessages.get(msg.fragment);
+				if (setRef && setRef.size === 0) {
+					fragmentMessages.delete(msg.fragment);
+					unhighlight(msg.fragment);
+				}
+			}
+			stopReturnEdge(msg.source, msg.target);
+			wait();
+			if (initialActivationToClear) {
+				unhighlight(initialActivationToClear);
+			}
+		}
+
+		// Animate initial source lifeline block
+		if (initialLifeline.id && highlighted.has(initialLifeline.id)) {
+			unhighlight(initialLifeline.id);
+		}
+		if (initialActivationBar && highlighted.has(initialActivationBar)) {
+			unhighlight(initialActivationBar);
+		}
+
+		console.log("=== Animation Script ===\n" + animationScript);
+		return animationScript;
+
+		// Helper: Check if a class has any highlighted elements inside
+		function hasHighlightedMethod(classId) {
+			const cdClass = cdClasses.find(c => c.id === classId);
+			return cdClass?.children.some(method => highlighted.has(method)) || false;
+		}
+
+		// Helper: Check if a lifeline has any highlighted activation bars
+		function hasHighlightedActivationBar(lifelineId) {
+			const lifeline = lifelines.find(l => l.id === lifelineId);
+			return lifeline?.activationBars.some(ab => highlighted.has(ab.id)) || false;
+		}
+
+		function findRelationBetweenClasses(sourceId, targetId) {
+			if (!sourceId || !targetId) return null;
+			return cdRelations.find(r => r.source === sourceId && r.target === targetId);
+			// TODO: Search in reverse direction if needed
+		}
+	}
+
+	// ============================================================================
+	// PLUGIN REGISTRATION
+	// ============================================================================
+
+	editorUi.actions.addAction('generateCustomAnim', function() {
+		const animation = generateAnimation();
+
+		// Save as a text file (one label per line)
+		const blob = new Blob([animation], { type: 'text/plain' });
+		const a = document.createElement('a');
+		a.href = URL.createObjectURL(blob);
+		a.download = 'animation.txt';
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+	});
+
+	var menu = editorUi.menus.get('extras');
+	var oldFunct = menu.funct;
+
+	menu.funct = function(menu, parent) {
+		oldFunct.apply(this, arguments);
+		editorUi.menus.addMenuItems(menu, ['-', '', 'generateCustomAnim'], parent);
+	};
+});
