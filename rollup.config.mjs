@@ -7,7 +7,7 @@ const baseConfig = {
 export default [
   // customAnimation plugin
   {
-    input: 'plugins/customAnimation/src/index.js',
+    input: 'plugins/customAnimation/src/main.js',
     output: {
       file: 'plugins/customAnimation/dist/customAnimation.plugin.js',
       format: 'iife',                
@@ -18,7 +18,7 @@ export default [
 
   // generateCustomAnim plugin
   {
-    input: 'plugins/generateCustomAnim/src/index.js',
+    input: 'plugins/generateCustomAnim/src/main.js',
     output: {
       file: 'plugins/generateCustomAnim/dist/generateCustomAnim.plugin.js',
       format: 'iife',
