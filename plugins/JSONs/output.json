@@ -1,31 +1,180 @@
 {
   "classes": [
     {
-      "Dummy": {
-        "methods": [],
+      "DistantClass": {
+        "methods": [
+          {
+            "MethodX": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {}
+            }
+          }
+        ],
         "attributes": []
       }
     },
     {
-      "DistantClass": {
-        "methods": [],
-        "attributes": [
+      "FriendlyClass": {
+        "methods": [
           {
-            "distantAttribute": {
-              "type": "int[]"
+            "Method01": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {}
             }
           },
           {
-            "distantCharArray": {
-              "type": "char[]"
+            "Method02": {
+              "parameters": [],
+              "returnType": "int",
+              "objects": {}
             }
           },
           {
-            "distantString": {
-              "type": "String[]"
+            "Method03": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "c": {
+                  "type": "DistantClass",
+                  "calls": [
+                    "MethodX"
+                  ]
+                }
+              }
             }
           }
-        ]
+        ],
+        "attributes": []
+      }
+    },
+    {
+      "LoneClass": {
+        "methods": [
+          {
+            "A": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {}
+            }
+          },
+          {
+            "B": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "i": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "C": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "i": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "D": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "r": {
+                  "type": "Random",
+                  "calls": [
+                    "nextBoolean"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "E": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    "Method01"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "F": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    "Method02"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "G": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    "Method01",
+                    "Method02"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "H": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    "Method03"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "I": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    "Method01",
+                    "Method03"
+                  ]
+                },
+                "x": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          }
+        ],
+        "attributes": []
       }
     }
   ]

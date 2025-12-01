@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { parse } from "java-parser";
+import util from "util";
 
 function listJavaFiles(dir) {
     const files = fs.readdirSync(dir);
@@ -61,6 +62,10 @@ function getProjectJSON(ast) {
     const output = {classes: []};
     var lastClass = null;
     var className = null;
+    var currentMethod = null;
+    let currentObjects = {};  // variableName -> { type, calls[] }
+    let currentClassInstance = null; 
+    let currentVarName = null;
     function walk(node) {
         if (!node || typeof node !== "object") return;
 
@@ -72,6 +77,8 @@ function getProjectJSON(ast) {
             }
         }else if (node.name === "methodDeclaration") {
             var methodName = node.children.methodHeader[0].children.methodDeclarator[0].children.Identifier[0].image;
+            currentMethod = methodName;
+
             if (methodName && methodName.length > 0) {
                 var methodReturnType = node.children.methodHeader[0].children.result[0].children; //getting return type of method
                 if ("Void" in methodReturnType) {
@@ -90,9 +97,22 @@ function getProjectJSON(ast) {
                         parameterList.push({[paramName]: paramType});
                     });
                 }
+                
+            // --- CREATE METHOD OBJECT ---
+            const methodObj = {
+                parameters: parameterList,
+                returnType: methodReturnType,
+                objects: {}   
+            };
 
-                lastClass[className].methods.push({[methodName]: {parameters: parameterList, returnType: methodReturnType}});
-            }
+            // PUSH METHOD
+            lastClass[className].methods.push({
+                [methodName]: methodObj
+            });
+
+            // STORE REFERENCE
+            currentObjects = methodObj.objects;
+            currentClassInstance = null;            }
         }else if (node.name === "fieldDeclaration") {
             var fieldName = node.children.variableDeclaratorList[0].children.variableDeclarator[0].children.variableDeclaratorId[0].children.Identifier[0].image;
             const fieldType = getTypeOfNode(node.children.unannType[0].children);            
@@ -100,7 +120,27 @@ function getProjectJSON(ast) {
             if (fieldName && fieldName.length > 0) {
                 lastClass[className].attributes.push({[fieldName]: {type: fieldType}});
             }
+        }else if (node.name === "unannClassOrInterfaceType"){
+            currentClassInstance = node.children.unannClassType[0].children.Identifier[0].image;
         }
+        else if (node.name === "variableDeclaratorId"){
+            var foundVarName = node.children.Identifier[0].image;
+            // register object in method
+            currentObjects[foundVarName] = {
+                type: currentClassInstance ?? "UNKNOWN",
+                calls: []
+            };
+            currentClassInstance = null; // reset   
+        }else if (node.name === "fqnOrRefTypePartFirst"){
+            currentVarName = node.children.fqnOrRefTypePartCommon[0].children.Identifier[0].image;
+        }
+        else if (node.name === "fqnOrRefTypePartRest"){
+            var calledMethod = node.children.fqnOrRefTypePartCommon[0].children.Identifier[0].image;
+            if (currentObjects[currentVarName]) {
+                currentObjects[currentVarName].calls.push(calledMethod);
+            }
+        }
+        
 
         if (node.children) {
             for (const key in node.children) {
@@ -119,35 +159,8 @@ function getProjectJSON(ast) {
 }
 
 
-
-function printAST(node, indent = 0) {
-    if (!node || typeof node !== "object") return;
-
-    const padding = " ".repeat(indent);
-
-    // Print basic info about the node
-    let info = node.name || node.token || "";
-    if (node.image) info += ` → ${node.image}`;
-    console.log(`${padding}${info}`);
-
-    // Recursively walk children
-    if (node.children) {
-        for (const key in node.children) {
-            const child = node.children[key];
-
-            if (Array.isArray(child)) {
-                child.forEach(c => printAST(c, indent + 2));
-            } else {
-                printAST(child, indent + 2);
-            }
-        }
-    }
-}
-
-
-
 // Usage
-const projectPath = "C:/Users/Legion/OneDrive/Desktop/skola/rocnik 5/ADIT/java-sample-mvc/src/Other";
+const projectPath = "D:/studium/agile/java-sample-mvc/src/Outlier"; 
 const files = listJavaFiles(projectPath);
 
 var finalOutput = {classes: []};
@@ -165,6 +178,6 @@ for (const file of files) {
 
 finalOutput = JSON.stringify(finalOutput, null, 2);
 //console.log(finalOutput);
-fs.writeFileSync("JSONs/output.json", finalOutput, "utf8");
+fs.writeFileSync("plugins/JSONs/output.json", finalOutput, "utf8");
 
 
