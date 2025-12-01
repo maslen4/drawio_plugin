@@ -1,4 +1,4 @@
-var fs = require('fs');
+import fs from "fs";
 
 function generateFlowFromJSON(json, methodName) {
 
@@ -10,7 +10,7 @@ function generateFlowFromJSON(json, methodName) {
             
             classContent.methods.forEach(method => { //get each method of class
                 if (method[methodName]) {
-                    methodContent = method[methodName];
+                    var methodContent = method[methodName];
                     returnType =  methodContent.returnType;
                 }
             });
@@ -57,7 +57,7 @@ function generateFlowFromJSON(json, methodName) {
 
 
 
-var methodName = "H"; //taken from User Input
+var methodName = "I"; //taken from User Input
 var obj = null;
 
 fs.readFile('plugins/JSONs/output.json', 'utf-8', function (err, data) {
