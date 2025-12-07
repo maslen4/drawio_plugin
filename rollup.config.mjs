@@ -1,11 +1,14 @@
 // rollup.config.mjs
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import commonjs from '@rollup/plugin-commonjs';
 
 const baseConfig = {
-  treeshake: false, 
+  treeshake: false,
+  plugins: [nodeResolve(), commonjs()],
 };
 
 export default [
-  // customAnimation plugin
+  // Combined bundle containing both plugins
   {
     input: 'plugins/customAnimation/src/main.js',
     output: {
@@ -23,6 +26,17 @@ export default [
       file: 'plugins/generateCustomAnim/dist/generateCustomAnim.plugin.js',
       format: 'iife',
       name: 'GenerateCustomAnimPlugin',
+    },
+    ...baseConfig,
+  },
+
+  //allPlugins
+  {
+    input: 'plugins/allPlugins/src/main.js',
+    output: {
+      file: 'plugins/allPlugins/dist/allPlugins.plugin.js',
+      format: 'iife',
+      name: 'DrawioCustomPlugins',
     },
     ...baseConfig,
   },
