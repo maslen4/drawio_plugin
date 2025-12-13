@@ -36,7 +36,7 @@ function generateFlowFromJSON(json, methodName) {
                         Object.values(objects).forEach(object => { //get all called methods(of other classes) inside this method
 
                             object.calls.forEach(call => {
-                                console.log("\nCALL From: " + className + " To: " + object.type + " Method: " + call);
+                                console.log("\nCALL From: " + className + " To: " + object.type + " Method: " + call + "()");
                                 flowforMethod(call);  // recursive call
                                 var returnType = returnTypeOfMethod(call);
                                 if (returnType && returnType !== "void") {

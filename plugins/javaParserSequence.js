@@ -69,6 +69,9 @@ function getProjectJSON(ast) {
     function walk(node) {
         if (!node || typeof node !== "object") return;
 
+        fs.writeFile("output.txt", node.name, function(err) {
+        }); 
+
         if (node.name === "normalClassDeclaration" || node.name === "normalInterfaceDeclaration") {
             className = node.children.typeIdentifier[0].children.Identifier[0].image;
             if (className && className.length > 0) {

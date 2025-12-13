@@ -1,0 +1,68 @@
+{
+  "sequence": [
+    {
+      "type": "method",
+      "name": "loginRequest",
+      "arguments": ["username", "password"],
+      "from": "Client",
+      "to": "AuthController",
+      "return": "void"
+    },
+    {
+      "type": "method",
+      "name": "checkCredentials",
+      "arguments": ["something"],
+      "from": "AuthController",
+      "to": "AuthService",
+      "return": "boolean"
+    },
+    {
+      "type": "fragment",
+      "fragmentType": "alt",
+      "condition": "credentialsValid",
+      "children": [
+        {
+          "type": "method",
+          "name": "doSomething",
+          "arguments": [],
+          "from": "AuthService",
+          "to": "SessionManager",
+          "return": "Session"
+        },
+        {
+          "type": "fragment",
+          "fragmentType": "loop",
+          "condition": "rolesRemaining",
+          "children": [
+            {
+              "type": "method",
+              "name": "loopinsidefragment",
+              "arguments": ["roleid"],
+              "from": "SessionManager",
+              "to": "RoleService",
+              "return": "Role"
+            }
+          ]
+        }
+      ],
+      "else": [
+        {
+          "type": "method",
+          "name": "showError",
+          "arguments": ["roleid"],
+          "from": "AuthController",
+          "to": "Client",
+          "return": "ErrorMessage"
+        }
+      ]
+    },
+    {
+      "type": "method",
+      "name": "display",
+      "arguments": ["session"],
+      "from": "Client",
+      "to": "Interface",
+      "return": "void"
+    }
+  ]
+}
