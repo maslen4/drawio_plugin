@@ -58,19 +58,99 @@ function getTypeOfNode(node) {
     return fieldType + dims;
 }
 
-function getProjectJSON(ast) {
-    const output = {classes: []};
+function getProjectJSON(ast, code) {
+    const output = {classes: [], fragments: []};
     var lastClass = null;
     var className = null;
+    var ifStart = null;
+    var ifEnd = null;
+    var ifConditionStart = null;
+    var ifConditionEnd = null;
     var currentMethod = null;
     let currentObjects = {};  // variableName -> { type, calls[] }
     let currentClassInstance = null; 
     let currentVarName = null;
+
+    let fragmentStack = [];
+    let fragments = [];
+    let methods = [];
+
     function walk(node) {
         if (!node || typeof node !== "object") return;
 
-        fs.writeFile("output.txt", node.name, function(err) {
-        }); 
+
+    
+        if (node.name) {
+        fs.appendFileSync(
+            "D:/studium/agile/drawio_plugin/output.txt",
+            node.name + "\n"
+            );
+        }
+
+
+        if (node.name === "ifStatement") {
+
+            ifConditionStart = node.children.LBrace[0].startOffset + 1;
+            ifConditionEnd = node.children.RBrace[0].endOffset - 1;
+            ifStart = node.location.startOffset;
+            ifEnd = node.location.endOffset;
+
+            const condition = code.substring(ifConditionStart, ifConditionEnd + 1);
+
+            const fragment = {
+                id: crypto.randomUUID(),
+                type: node.children.Else ? "alt" : "opt",
+                condition: condition,
+                startOffset: node.location.startOffset,
+                endOffset: node.location.endOffset,
+                parent: fragmentStack.length
+                    ? fragmentStack[fragmentStack.length - 1].id
+                    : null,
+                messages: []
+            };
+
+            fragments.push(fragment);
+            output.fragments.push(fragment);
+            fragmentStack.push(fragment);
+        }
+
+        if (node.name === "forStatement" || node.name === "whileStatement") {
+            let loopConditionStart = 0;
+            let loopConditionEnd = 0;
+
+            if (node.children.enhancedForStatement){
+                loopConditionStart = node.children.enhancedForStatement[0].children.LBrace[0].endOffset + 1;
+                loopConditionEnd = node.children.enhancedForStatement[0].children.RBrace[0].startOffset - 1;
+            }
+            else if (node.children.basicForStatement){
+                loopConditionStart = node.children.basicForStatement[0].children.LBrace[0].endOffset + 1;
+                loopConditionEnd = node.children.basicForStatement[0].children.RBrace[0].startOffset - 1;
+            }
+            else{
+                loopConditionStart = node.children.LBrace[0].endOffset + 1;
+                loopConditionEnd = node.children.RBrace[0].startOffset - 1;
+            }
+            let loopStart = node.location.startOffset;
+            let loopEnd = node.location.endOffset;
+
+            const condition = code.substring(loopConditionStart, loopConditionEnd + 1);
+
+            const fragment = {
+                id: crypto.randomUUID(),
+                type: "loop",
+                condition: condition,
+                startOffset: loopStart,
+                endOffset: loopEnd,
+                parent: fragmentStack.length
+                    ? fragmentStack[fragmentStack.length - 1].id
+                    : null,
+                messages: []
+            };
+
+            fragments.push(fragment);
+            output.fragments.push(fragment);
+            fragmentStack.push(fragment);
+        }
 
         if (node.name === "normalClassDeclaration" || node.name === "normalInterfaceDeclaration") {
             className = node.children.typeIdentifier[0].children.Identifier[0].image;
@@ -81,6 +161,7 @@ function getProjectJSON(ast) {
         }else if (node.name === "methodDeclaration") {
             var methodName = node.children.methodHeader[0].children.methodDeclarator[0].children.Identifier[0].image;
             currentMethod = methodName;
+            methods.push(methodName);
 
             if (methodName && methodName.length > 0) {
                 var methodReturnType = node.children.methodHeader[0].children.result[0].children; //getting return type of method
@@ -105,7 +186,7 @@ function getProjectJSON(ast) {
             const methodObj = {
                 parameters: parameterList,
                 returnType: methodReturnType,
-                objects: {}   
+                objects: {own: {type: className, calls: []}} // initialize with "self" object
             };
 
             // PUSH METHOD
@@ -136,11 +217,38 @@ function getProjectJSON(ast) {
             currentClassInstance = null; // reset   
         }else if (node.name === "fqnOrRefTypePartFirst"){
             currentVarName = node.children.fqnOrRefTypePartCommon[0].children.Identifier[0].image;
+
+            for (let i = 0; i < fragmentStack.length; i++) { // check if we are inside any fragments
+                while ( 
+                    fragmentStack.length > 0 &&
+                    node.location?.endOffset >= fragmentStack[fragmentStack.length - 1].endOffset
+                ) {
+                    fragmentStack.pop(); // remove last fragment
+                }
+            }
+
+            if(methods.includes(currentVarName)){
+                // It is a method call on self
+                if (currentObjects["own"]) {
+                    currentObjects["own"].calls.push({calledMethod: currentVarName, currentFragment: fragmentStack.length ? fragmentStack[fragmentStack.length - 1].id : null, offset: node.children.fqnOrRefTypePartCommon[0].children.Identifier[0].startOffset});
+                }
+            }
         }
         else if (node.name === "fqnOrRefTypePartRest"){
             var calledMethod = node.children.fqnOrRefTypePartCommon[0].children.Identifier[0].image;
+
+            for (let i = 0; i < fragmentStack.length; i++) { // check if we are inside any fragments
+                while ( 
+                    fragmentStack.length > 0 &&
+                    node.location?.endOffset >= fragmentStack[fragmentStack.length - 1].endOffset
+                ) {
+                    fragmentStack.pop(); // remove last fragment
+                }
+            }
+
+
             if (currentObjects[currentVarName]) {
-                currentObjects[currentVarName].calls.push(calledMethod);
+                currentObjects[currentVarName].calls.push({calledMethod: calledMethod, currentFragment: fragmentStack.length ? fragmentStack[fragmentStack.length - 1].id : null, offset: node.children.fqnOrRefTypePartCommon[0].children.Identifier[0].startOffset});
             }
         }
         
@@ -163,24 +271,24 @@ function getProjectJSON(ast) {
 
 
 // Usage
-const projectPath = "D:/studium/agile/java-sample-mvc/src/Outlier"; 
+const projectPath = "D:\\studium\\agile\\java-sample-mvc\\src\\Outlier";
 const files = listJavaFiles(projectPath);
 
-var finalOutput = {classes: []};
+var finalOutput = {classes: [], fragments: []};
 
 for (const file of files) {
     const code = fs.readFileSync(file, "utf8");
     const ast = parse(code);
     //printAST(ast);
-    const json = getProjectJSON(ast);
+    const json = getProjectJSON(ast, code);
     
     // Merge json into finalOutput
     const parsedJson = JSON.parse(json);
-    finalOutput.classes = finalOutput.classes.concat(parsedJson.classes);
+    finalOutput.classes.push(...parsedJson.classes);
+    finalOutput.fragments.push(...parsedJson.fragments);
 }
 
 finalOutput = JSON.stringify(finalOutput, null, 2);
 //console.log(finalOutput);
 fs.writeFileSync("plugins/JSONs/output.json", finalOutput, "utf8");
-
 

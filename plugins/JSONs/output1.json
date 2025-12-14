@@ -1,0 +1,54 @@
+{
+  "sequence": [
+    [
+      {
+        "type": "method",
+        "name": "W",
+        "arguments": [],
+        "from": "LoneClass",
+        "to": "LoneClass",
+        "return": "void"
+      },
+      {
+        "type": "method",
+        "name": "Method04",
+        "arguments": [],
+        "from": "LoneClass",
+        "to": "FriendlyClass",
+        "return": "void"
+      },
+      {
+        "type": "fragment",
+        "id": "6c6f5ced-73c8-4844-8e89-12cb5543361f",
+        "fragmentType": "loop",
+        "condition": "i < 10 ",
+        "children": [
+          {
+            "type": "method",
+            "name": "Method05",
+            "arguments": [],
+            "from": "LoneClass",
+            "to": "FriendlyClass",
+            "return": "void"
+          }
+        ]
+      },
+      {
+        "type": "method",
+        "name": "Method06",
+        "arguments": [],
+        "from": "LoneClass",
+        "to": "FriendlyClass",
+        "return": "void"
+      },
+      {
+        "type": "method",
+        "name": "A",
+        "arguments": [],
+        "from": "LoneClass",
+        "to": "LoneClass",
+        "return": "void"
+      }
+    ]
+  ]
+}

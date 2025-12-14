@@ -7,7 +7,12 @@
             "MethodX": {
               "parameters": [],
               "returnType": "void",
-              "objects": {}
+              "objects": {
+                "own": {
+                  "type": "DistantClass",
+                  "calls": []
+                }
+              }
             }
           }
         ],
@@ -21,14 +26,24 @@
             "Method01": {
               "parameters": [],
               "returnType": "void",
-              "objects": {}
+              "objects": {
+                "own": {
+                  "type": "FriendlyClass",
+                  "calls": []
+                }
+              }
             }
           },
           {
             "Method02": {
               "parameters": [],
               "returnType": "int",
-              "objects": {}
+              "objects": {
+                "own": {
+                  "type": "FriendlyClass",
+                  "calls": []
+                }
+              }
             }
           },
           {
@@ -36,10 +51,18 @@
               "parameters": [],
               "returnType": "void",
               "objects": {
+                "own": {
+                  "type": "FriendlyClass",
+                  "calls": []
+                },
                 "c": {
                   "type": "DistantClass",
                   "calls": [
-                    "MethodX"
+                    {
+                      "calledMethod": "MethodX",
+                      "currentFragment": null,
+                      "offset": 187
+                    }
                   ]
                 }
               }
@@ -56,7 +79,12 @@
             "A": {
               "parameters": [],
               "returnType": "void",
-              "objects": {}
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                }
+              }
             }
           },
           {
@@ -64,6 +92,10 @@
               "parameters": [],
               "returnType": "void",
               "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
                 "i": {
                   "type": "UNKNOWN",
                   "calls": []
@@ -76,6 +108,10 @@
               "parameters": [],
               "returnType": "void",
               "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
                 "i": {
                   "type": "UNKNOWN",
                   "calls": []
@@ -88,10 +124,18 @@
               "parameters": [],
               "returnType": "void",
               "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
                 "r": {
                   "type": "Random",
                   "calls": [
-                    "nextBoolean"
+                    {
+                      "calledMethod": "nextBoolean",
+                      "currentFragment": null,
+                      "offset": 563
+                    }
                   ]
                 }
               }
@@ -102,10 +146,18 @@
               "parameters": [],
               "returnType": "void",
               "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
                 "friend": {
                   "type": "FriendlyClass",
                   "calls": [
-                    "Method01"
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": null,
+                      "offset": 694
+                    }
                   ]
                 }
               }
@@ -116,10 +168,18 @@
               "parameters": [],
               "returnType": "void",
               "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
                 "friend": {
                   "type": "FriendlyClass",
                   "calls": [
-                    "Method02"
+                    {
+                      "calledMethod": "Method02",
+                      "currentFragment": null,
+                      "offset": 822
+                    }
                   ]
                 }
               }
@@ -130,11 +190,23 @@
               "parameters": [],
               "returnType": "void",
               "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
                 "friend": {
                   "type": "FriendlyClass",
                   "calls": [
-                    "Method01",
-                    "Method02"
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": null,
+                      "offset": 944
+                    },
+                    {
+                      "calledMethod": "Method02",
+                      "currentFragment": null,
+                      "offset": 966
+                    }
                   ]
                 }
               }
@@ -145,10 +217,18 @@
               "parameters": [],
               "returnType": "void",
               "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
                 "friend": {
                   "type": "FriendlyClass",
                   "calls": [
-                    "Method03"
+                    {
+                      "calledMethod": "Method03",
+                      "currentFragment": null,
+                      "offset": 1091
+                    }
                   ]
                 }
               }
@@ -159,14 +239,746 @@
               "parameters": [],
               "returnType": "void",
               "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
                 "friend": {
                   "type": "FriendlyClass",
                   "calls": [
-                    "Method01",
-                    "Method03"
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": "eed87ea9-1635-46b9-84cc-d6809e2ab7d0",
+                      "offset": 1260
+                    },
+                    {
+                      "calledMethod": "Method03",
+                      "currentFragment": "eed87ea9-1635-46b9-84cc-d6809e2ab7d0",
+                      "offset": 1298
+                    }
                   ]
                 },
                 "x": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "J": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": [
+                    {
+                      "calledMethod": "I",
+                      "currentFragment": null,
+                      "offset": 1383
+                    },
+                    {
+                      "calledMethod": "B",
+                      "currentFragment": null,
+                      "offset": 1391
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "K": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": [
+                    {
+                      "calledMethod": "J",
+                      "currentFragment": null,
+                      "offset": 1454
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "L": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": null,
+                      "offset": 1583
+                    },
+                    {
+                      "calledMethod": "Method04",
+                      "currentFragment": "fc4bf253-5e24-4c16-8c53-17f49fee0caa",
+                      "offset": 1643
+                    },
+                    {
+                      "calledMethod": "Method05",
+                      "currentFragment": null,
+                      "offset": 1672
+                    }
+                  ]
+                },
+                "a": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "M": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": null,
+                      "offset": 1810
+                    },
+                    {
+                      "calledMethod": "Method04",
+                      "currentFragment": "bc202a6f-6462-4e9c-9ba7-92e6aa623ce9",
+                      "offset": 1870
+                    },
+                    {
+                      "calledMethod": "Method03",
+                      "currentFragment": "bc202a6f-6462-4e9c-9ba7-92e6aa623ce9",
+                      "offset": 1911
+                    },
+                    {
+                      "calledMethod": "Method05",
+                      "currentFragment": null,
+                      "offset": 1940
+                    }
+                  ]
+                },
+                "a": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "N": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": null,
+                      "offset": 2103
+                    },
+                    {
+                      "calledMethod": "Method04",
+                      "currentFragment": "ed6ddf02-1d9f-4ac2-9935-58fdb35d3286",
+                      "offset": 2233
+                    },
+                    {
+                      "calledMethod": "Method05",
+                      "currentFragment": null,
+                      "offset": 2275
+                    }
+                  ]
+                },
+                "a": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                },
+                "b": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                },
+                "x": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "O": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": null,
+                      "offset": 2445
+                    },
+                    {
+                      "calledMethod": "Method04",
+                      "currentFragment": "73deb530-4a7e-4eda-a2b9-3ab04c52e898",
+                      "offset": 2542
+                    },
+                    {
+                      "calledMethod": "Method05",
+                      "currentFragment": "5e4698a9-da40-4b27-a46e-397c564a2a9a",
+                      "offset": 2579
+                    },
+                    {
+                      "calledMethod": "Method06",
+                      "currentFragment": "0c85556b-391c-490d-a119-55c7bd5dd421",
+                      "offset": 2637
+                    },
+                    {
+                      "calledMethod": "Method07",
+                      "currentFragment": "5e4698a9-da40-4b27-a46e-397c564a2a9a",
+                      "offset": 2668
+                    },
+                    {
+                      "calledMethod": "Method08",
+                      "currentFragment": "73deb530-4a7e-4eda-a2b9-3ab04c52e898",
+                      "offset": 2697
+                    },
+                    {
+                      "calledMethod": "Method09",
+                      "currentFragment": null,
+                      "offset": 2726
+                    }
+                  ]
+                },
+                "a": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                },
+                "b": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                },
+                "x": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "P": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": null,
+                      "offset": 2898
+                    },
+                    {
+                      "calledMethod": "Method04",
+                      "currentFragment": "455a79a1-0895-46df-a15e-8f814584e8ae",
+                      "offset": 2995
+                    },
+                    {
+                      "calledMethod": "Method05",
+                      "currentFragment": "2251dc7f-990e-459e-a97b-7c73adc292b0",
+                      "offset": 3032
+                    },
+                    {
+                      "calledMethod": "Method06",
+                      "currentFragment": "ca10e7b3-5266-4ddf-96f7-36cac5db1960",
+                      "offset": 3090
+                    },
+                    {
+                      "calledMethod": "Method08",
+                      "currentFragment": "ca10e7b3-5266-4ddf-96f7-36cac5db1960",
+                      "offset": 3139
+                    },
+                    {
+                      "calledMethod": "Method07",
+                      "currentFragment": "2251dc7f-990e-459e-a97b-7c73adc292b0",
+                      "offset": 3170
+                    },
+                    {
+                      "calledMethod": "Method06",
+                      "currentFragment": "2251dc7f-990e-459e-a97b-7c73adc292b0",
+                      "offset": 3215
+                    },
+                    {
+                      "calledMethod": "Method08",
+                      "currentFragment": "455a79a1-0895-46df-a15e-8f814584e8ae",
+                      "offset": 3244
+                    },
+                    {
+                      "calledMethod": "Method05",
+                      "currentFragment": "455a79a1-0895-46df-a15e-8f814584e8ae",
+                      "offset": 3285
+                    },
+                    {
+                      "calledMethod": "Method06",
+                      "currentFragment": "a2009634-e3a6-4f20-a9af-619985575959",
+                      "offset": 3324
+                    },
+                    {
+                      "calledMethod": "Method07",
+                      "currentFragment": "a2009634-e3a6-4f20-a9af-619985575959",
+                      "offset": 3369
+                    },
+                    {
+                      "calledMethod": "Method08",
+                      "currentFragment": "455a79a1-0895-46df-a15e-8f814584e8ae",
+                      "offset": 3398
+                    },
+                    {
+                      "calledMethod": "Method09",
+                      "currentFragment": null,
+                      "offset": 3427
+                    }
+                  ]
+                },
+                "a": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                },
+                "b": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                },
+                "x": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "Q": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": null,
+                      "offset": 3578
+                    },
+                    {
+                      "calledMethod": "Method04",
+                      "currentFragment": "ce95a157-7432-4811-ba41-85178b4a35fb",
+                      "offset": 3638
+                    },
+                    {
+                      "calledMethod": "Method03",
+                      "currentFragment": "7da38c28-ea55-4270-9cb0-ac8fa2d673fb",
+                      "offset": 3687
+                    },
+                    {
+                      "calledMethod": "Method05",
+                      "currentFragment": null,
+                      "offset": 3716
+                    }
+                  ]
+                },
+                "a": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "R": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method08",
+                      "currentFragment": null,
+                      "offset": 3891
+                    },
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": "3278d2b4-1b9a-44e3-8ddd-6ccfe6abcfe9",
+                      "offset": 3931
+                    },
+                    {
+                      "calledMethod": "Method02",
+                      "currentFragment": "3e8bce41-2d0c-4380-b1fb-fbe781aa3db5",
+                      "offset": 3974
+                    },
+                    {
+                      "calledMethod": "Method03",
+                      "currentFragment": "bae77a1a-875b-4eee-8e62-1aed9ff05873",
+                      "offset": 4017
+                    },
+                    {
+                      "calledMethod": "Method04",
+                      "currentFragment": "c1c3c198-78d4-4e7c-8175-e7ee5288735e",
+                      "offset": 4060
+                    },
+                    {
+                      "calledMethod": "Method08",
+                      "currentFragment": null,
+                      "offset": 4088
+                    }
+                  ]
+                },
+                "a": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "S": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method08",
+                      "currentFragment": null,
+                      "offset": 4260
+                    },
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": "5a3224b9-804a-48b8-b287-2379500aa401",
+                      "offset": 4300
+                    },
+                    {
+                      "calledMethod": "Method02",
+                      "currentFragment": "709b8569-41c9-498e-98e0-e20e05b90fc3",
+                      "offset": 4343
+                    },
+                    {
+                      "calledMethod": "Method03",
+                      "currentFragment": "0dd41378-b965-4522-a7d1-b4d149d256b8",
+                      "offset": 4386
+                    },
+                    {
+                      "calledMethod": "Method04",
+                      "currentFragment": "0a456306-4e02-4a82-b4d8-670ec19bfd5a",
+                      "offset": 4429
+                    },
+                    {
+                      "calledMethod": "Method05",
+                      "currentFragment": "0a456306-4e02-4a82-b4d8-670ec19bfd5a",
+                      "offset": 4460
+                    },
+                    {
+                      "calledMethod": "Method08",
+                      "currentFragment": null,
+                      "offset": 4488
+                    }
+                  ]
+                },
+                "a": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "T": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method08",
+                      "currentFragment": null,
+                      "offset": 4645
+                    },
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": "1c8789b2-82f5-4a2f-8a2e-912e9ab0e36f",
+                      "offset": 4685
+                    },
+                    {
+                      "calledMethod": "Method02",
+                      "currentFragment": "cb3e99e9-92dd-4be0-90d4-6c8a9590fd30",
+                      "offset": 4723
+                    },
+                    {
+                      "calledMethod": "Method03",
+                      "currentFragment": "c7c6759e-d208-4f1e-a714-4631f16b8b1b",
+                      "offset": 4761
+                    },
+                    {
+                      "calledMethod": "Method04",
+                      "currentFragment": "f6a91207-f25a-4a4c-bfa8-a161820ba553",
+                      "offset": 4799
+                    },
+                    {
+                      "calledMethod": "Method08",
+                      "currentFragment": null,
+                      "offset": 4827
+                    }
+                  ]
+                },
+                "a": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "U": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method04",
+                      "currentFragment": null,
+                      "offset": 4948
+                    },
+                    {
+                      "calledMethod": "Method05",
+                      "currentFragment": "148fa306-0a7f-4650-9f9e-1240f97a7757",
+                      "offset": 5011
+                    },
+                    {
+                      "calledMethod": "Method06",
+                      "currentFragment": null,
+                      "offset": 5042
+                    }
+                  ]
+                },
+                "i": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "V": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method04",
+                      "currentFragment": null,
+                      "offset": 5167
+                    },
+                    {
+                      "calledMethod": "Method05",
+                      "currentFragment": "848bd7d5-2031-4dcf-9e8a-5994f1f32cdc",
+                      "offset": 5264
+                    },
+                    {
+                      "calledMethod": "Method06",
+                      "currentFragment": null,
+                      "offset": 5295
+                    }
+                  ]
+                },
+                "l": {
+                  "type": "List",
+                  "calls": []
+                },
+                "s": {
+                  "type": "String",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "W": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method04",
+                      "currentFragment": null,
+                      "offset": 5418
+                    },
+                    {
+                      "calledMethod": "Method05",
+                      "currentFragment": "6c6f5ced-73c8-4844-8e89-12cb5543361f",
+                      "offset": 5482
+                    },
+                    {
+                      "calledMethod": "Method06",
+                      "currentFragment": null,
+                      "offset": 5522
+                    }
+                  ]
+                },
+                "i": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "X": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": [
+                    {
+                      "calledMethod": "W",
+                      "currentFragment": null,
+                      "offset": 5591
+                    },
+                    {
+                      "calledMethod": "A",
+                      "currentFragment": null,
+                      "offset": 5599
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "Y": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": null,
+                      "offset": 5725
+                    },
+                    {
+                      "calledMethod": "Method05",
+                      "currentFragment": null,
+                      "offset": 5848
+                    }
+                  ]
+                },
+                "a": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                },
+                "i": {
+                  "type": "UNKNOWN",
+                  "calls": []
+                }
+              }
+            }
+          },
+          {
+            "Z": {
+              "parameters": [],
+              "returnType": "void",
+              "objects": {
+                "own": {
+                  "type": "LoneClass",
+                  "calls": []
+                },
+                "friend": {
+                  "type": "FriendlyClass",
+                  "calls": [
+                    {
+                      "calledMethod": "Method01",
+                      "currentFragment": null,
+                      "offset": 5968
+                    },
+                    {
+                      "calledMethod": "Method05",
+                      "currentFragment": null,
+                      "offset": 6055
+                    }
+                  ]
+                },
+                "a": {
                   "type": "UNKNOWN",
                   "calls": []
                 }
@@ -176,6 +988,323 @@
         ],
         "attributes": []
       }
+    }
+  ],
+  "fragments": [
+    {
+      "id": "94a8d923-fcf0-4887-91ae-e08f626c6339",
+      "type": "opt",
+      "condition": "i < 7",
+      "startOffset": 371,
+      "endOffset": 405,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "eed87ea9-1635-46b9-84cc-d6809e2ab7d0",
+      "type": "alt",
+      "condition": "x > 8",
+      "startOffset": 1236,
+      "endOffset": 1313,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "fc4bf253-5e24-4c16-8c53-17f49fee0caa",
+      "type": "opt",
+      "condition": "a",
+      "startOffset": 1623,
+      "endOffset": 1658,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "bc202a6f-6462-4e9c-9ba7-92e6aa623ce9",
+      "type": "alt",
+      "condition": "a",
+      "startOffset": 1850,
+      "endOffset": 1926,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "e2ee6978-df4a-4e89-bdf8-7275e25e16ea",
+      "type": "opt",
+      "condition": "a",
+      "startOffset": 2180,
+      "endOffset": 2261,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "b95cd8b5-60ea-459e-b96c-3e23fc7c15f5",
+      "type": "opt",
+      "condition": "b",
+      "startOffset": 2193,
+      "endOffset": 2256,
+      "parent": "e2ee6978-df4a-4e89-bdf8-7275e25e16ea",
+      "messages": []
+    },
+    {
+      "id": "ed6ddf02-1d9f-4ac2-9935-58fdb35d3286",
+      "type": "opt",
+      "condition": "x < 55",
+      "startOffset": 2207,
+      "endOffset": 2250,
+      "parent": "b95cd8b5-60ea-459e-b96c-3e23fc7c15f5",
+      "messages": []
+    },
+    {
+      "id": "73deb530-4a7e-4eda-a2b9-3ab04c52e898",
+      "type": "opt",
+      "condition": "a",
+      "startOffset": 2522,
+      "endOffset": 2712,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "5e4698a9-da40-4b27-a46e-397c564a2a9a",
+      "type": "opt",
+      "condition": "b",
+      "startOffset": 2558,
+      "endOffset": 2684,
+      "parent": "73deb530-4a7e-4eda-a2b9-3ab04c52e898",
+      "messages": []
+    },
+    {
+      "id": "0c85556b-391c-490d-a119-55c7bd5dd421",
+      "type": "opt",
+      "condition": "x < 55 + 14 && b || a",
+      "startOffset": 2596,
+      "endOffset": 2654,
+      "parent": "5e4698a9-da40-4b27-a46e-397c564a2a9a",
+      "messages": []
+    },
+    {
+      "id": "455a79a1-0895-46df-a15e-8f814584e8ae",
+      "type": "alt",
+      "condition": "a",
+      "startOffset": 2975,
+      "endOffset": 3413,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "2251dc7f-990e-459e-a97b-7c73adc292b0",
+      "type": "alt",
+      "condition": "b",
+      "startOffset": 3011,
+      "endOffset": 3231,
+      "parent": "455a79a1-0895-46df-a15e-8f814584e8ae",
+      "messages": []
+    },
+    {
+      "id": "ca10e7b3-5266-4ddf-96f7-36cac5db1960",
+      "type": "alt",
+      "condition": "x < 55 + 14 && b || a",
+      "startOffset": 3049,
+      "endOffset": 3156,
+      "parent": "2251dc7f-990e-459e-a97b-7c73adc292b0",
+      "messages": []
+    },
+    {
+      "id": "a2009634-e3a6-4f20-a9af-619985575959",
+      "type": "alt",
+      "condition": "b",
+      "startOffset": 3301,
+      "endOffset": 3385,
+      "parent": "455a79a1-0895-46df-a15e-8f814584e8ae",
+      "messages": []
+    },
+    {
+      "id": "ce95a157-7432-4811-ba41-85178b4a35fb",
+      "type": "alt",
+      "condition": "a",
+      "startOffset": 3618,
+      "endOffset": 3702,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "7da38c28-ea55-4270-9cb0-ac8fa2d673fb",
+      "type": "opt",
+      "condition": "!a",
+      "startOffset": 3663,
+      "endOffset": 3702,
+      "parent": "ce95a157-7432-4811-ba41-85178b4a35fb",
+      "messages": []
+    },
+    {
+      "id": "3278d2b4-1b9a-44e3-8ddd-6ccfe6abcfe9",
+      "type": "alt",
+      "condition": "a == 1",
+      "startOffset": 3910,
+      "endOffset": 4072,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "3e8bce41-2d0c-4380-b1fb-fbe781aa3db5",
+      "type": "alt",
+      "condition": "a == 2",
+      "startOffset": 3953,
+      "endOffset": 4072,
+      "parent": "3278d2b4-1b9a-44e3-8ddd-6ccfe6abcfe9",
+      "messages": []
+    },
+    {
+      "id": "bae77a1a-875b-4eee-8e62-1aed9ff05873",
+      "type": "alt",
+      "condition": "a == 3",
+      "startOffset": 3996,
+      "endOffset": 4072,
+      "parent": "3e8bce41-2d0c-4380-b1fb-fbe781aa3db5",
+      "messages": []
+    },
+    {
+      "id": "c1c3c198-78d4-4e7c-8175-e7ee5288735e",
+      "type": "opt",
+      "condition": "a == 4",
+      "startOffset": 4039,
+      "endOffset": 4072,
+      "parent": "bae77a1a-875b-4eee-8e62-1aed9ff05873",
+      "messages": []
+    },
+    {
+      "id": "5a3224b9-804a-48b8-b287-2379500aa401",
+      "type": "alt",
+      "condition": "a == 1",
+      "startOffset": 4279,
+      "endOffset": 4472,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "709b8569-41c9-498e-98e0-e20e05b90fc3",
+      "type": "alt",
+      "condition": "a == 2",
+      "startOffset": 4322,
+      "endOffset": 4472,
+      "parent": "5a3224b9-804a-48b8-b287-2379500aa401",
+      "messages": []
+    },
+    {
+      "id": "0dd41378-b965-4522-a7d1-b4d149d256b8",
+      "type": "alt",
+      "condition": "a == 3",
+      "startOffset": 4365,
+      "endOffset": 4472,
+      "parent": "709b8569-41c9-498e-98e0-e20e05b90fc3",
+      "messages": []
+    },
+    {
+      "id": "0a456306-4e02-4a82-b4d8-670ec19bfd5a",
+      "type": "alt",
+      "condition": "a == 4",
+      "startOffset": 4408,
+      "endOffset": 4472,
+      "parent": "0dd41378-b965-4522-a7d1-b4d149d256b8",
+      "messages": []
+    },
+    {
+      "id": "1c8789b2-82f5-4a2f-8a2e-912e9ab0e36f",
+      "type": "opt",
+      "condition": "a == 1",
+      "startOffset": 4664,
+      "endOffset": 4697,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "cb3e99e9-92dd-4be0-90d4-6c8a9590fd30",
+      "type": "opt",
+      "condition": "a == 2",
+      "startOffset": 4702,
+      "endOffset": 4735,
+      "parent": "1c8789b2-82f5-4a2f-8a2e-912e9ab0e36f",
+      "messages": []
+    },
+    {
+      "id": "c7c6759e-d208-4f1e-a714-4631f16b8b1b",
+      "type": "opt",
+      "condition": "a == 3",
+      "startOffset": 4740,
+      "endOffset": 4773,
+      "parent": "cb3e99e9-92dd-4be0-90d4-6c8a9590fd30",
+      "messages": []
+    },
+    {
+      "id": "f6a91207-f25a-4a4c-bfa8-a161820ba553",
+      "type": "opt",
+      "condition": "a == 4",
+      "startOffset": 4778,
+      "endOffset": 4811,
+      "parent": "c7c6759e-d208-4f1e-a714-4631f16b8b1b",
+      "messages": []
+    },
+    {
+      "id": "148fa306-0a7f-4650-9f9e-1240f97a7757",
+      "type": "loop",
+      "condition": "int i = 5; i < 10; i++",
+      "startOffset": 4967,
+      "endOffset": 5026,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "848bd7d5-2031-4dcf-9e8a-5994f1f32cdc",
+      "type": "loop",
+      "condition": "String s: l",
+      "startOffset": 5231,
+      "endOffset": 5279,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "6c6f5ced-73c8-4844-8e89-12cb5543361f",
+      "type": "loop",
+      "condition": "i < 10 ",
+      "startOffset": 5451,
+      "endOffset": 5506,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "fe2e2f81-3c9c-4798-8987-49dd771060f8",
+      "type": "opt",
+      "condition": "a",
+      "startOffset": 5765,
+      "endOffset": 5792,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "ba984f46-efe8-482b-8f75-ad62c1aa423b",
+      "type": "loop",
+      "condition": "a",
+      "startOffset": 5801,
+      "endOffset": 5834,
+      "parent": "fe2e2f81-3c9c-4798-8987-49dd771060f8",
+      "messages": []
+    },
+    {
+      "id": "c5e456df-585f-4542-b0d3-14289bc035be",
+      "type": "opt",
+      "condition": "a",
+      "startOffset": 6008,
+      "endOffset": 6020,
+      "parent": null,
+      "messages": []
+    },
+    {
+      "id": "9e5f907b-22f8-4497-b152-8ac545ab8319",
+      "type": "loop",
+      "condition": "!a",
+      "startOffset": 6027,
+      "endOffset": 6039,
+      "parent": "c5e456df-585f-4542-b0d3-14289bc035be",
+      "messages": []
     }
   ]
 }
