@@ -12,7 +12,7 @@ function jsonToDrawioXmlSequence(diagram) {
     cells.push(
       `<mxCell id="${esc(lifelineName)}" value="${esc(lifelineName)}" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;container=0;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;size=65;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" `+
       `vertex="1" parent="sequence_diagram">` +
-        `<mxGeometry x="${xLifeline}" y="50" width="130" height="500" as="geometry"/>` +
+        `<mxGeometry x="${xLifeline}" y="0" width="130" height="1000" as="geometry"/>` +
         `</mxCell>`
     );
   }
@@ -22,12 +22,11 @@ function jsonToDrawioXmlSequence(diagram) {
     for (const activationBlock of diagram.activationBlocks[activationBlockLifeline]) {
         const startY = activationBlock.startY;
         const endY = activationBlock.endY;
-        const index = activationBlock.index;
-        const lifelineX = 55;
+        const lifelineX = 0;
         cells.push(
             `<mxCell id="${activationBlockLifeline + "_" + idx}" value="" style="shape=umlActivation;perimeter=rectanglePerimeter;whiteSpace=wrap;container=0;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#333333;" `+
             `vertex="1" parent="${esc(activationBlockLifeline)}">` +
-                `<mxGeometry x="${lifelineX}" y="${startY}" width="20" height="${endY - startY}" as="geometry"/>` +
+                `<mxGeometry x="${lifelineX+55}" y="${startY}" width="20" height="${endY - startY}" as="geometry"/>` +
             `</mxCell>`
         );
         idx += 1;
@@ -43,31 +42,16 @@ function jsonToDrawioXmlSequence(diagram) {
     const name = message.name;
     const y = message.y;
 
-    var idxFrom = 0;
-    for (const activBlocks of diagram.activationBlocks[from]) {
-        if (y >= activBlocks.startY && (activBlocks.endY === null || y <= activBlocks.endY)) {
-            break;
-        }
-        idxFrom += 1;
-    }
-
-    var idxTo = 0;
-    for (const activBlocks of diagram.activationBlocks[to]) {
-        if (y >= activBlocks.startY && (activBlocks.endY === null || y <= activBlocks.endY)) {
-            break;
-        }
-        idxTo += 1;
-    }
-
 
     cells.push(`
-        <mxCell id="message_${index}_${from}_${to}" value="${name}" style="edgeStyle=orthogonalEdgeStyle;elbow=horizontal;rounded=0;orthogonalLoop=0;jettySize=auto;html=1;startArrow=none;endArrow=open;endFill=0;strokeColor=#666666;" 
-        edge="1" source="${from}_${idxFrom}" target="${to}_${idxTo}" parent="sequence_diagram">
-
-        style="edgeStyle=orthogonalEdgeStyle;elbow=horizontal;rounded=0;html=1;startArrow=none;endArrow=open;endFill=0;strokeColor=#666666;">
-        <mxGeometry relative="1" as="geometry"/>
-
-        </mxCell>`
+        <mxCell id="message_${index}_${from}_${to}" value="${name}" edge="1" parent="sequence_diagram"
+                style="endArrow=open;startArrow=none;rounded=0;strokeColor=#333333;">
+        <mxGeometry as="geometry">
+            <mxPoint x="${start+55}" y="${y}" as="sourcePoint"/>
+            <mxPoint x="${end+55}" y="${y}" as="targetPoint"/>
+        </mxGeometry>
+        </mxCell>
+`.trim()
     );
   }
 
