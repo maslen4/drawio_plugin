@@ -72,22 +72,49 @@ function generateFlowFromJSON(json, methodName) {
                                 !isInFragment
                             ){
                                 console.log(`--- ENTERING FRAGMENT ID: ${call.fragment} ---`);
+                                let fragmentNode = {};
                                 const fragmentMeta = getFragmentById(json.fragments, call.fragment);
 
-                                const fragmentNode = {
-                                    type: "fragment",
-                                    id: fragmentMeta.id,
-                                    fragmentType: fragmentMeta.type,
-                                    condition: fragmentMeta.condition,
-                                    children: []
-                                };
+                                if (fragmentMeta.else) {
+                                    fragmentNode = {
+                                        type: "fragment",
+                                        id: fragmentMeta.id,
+                                        fragmentType: fragmentMeta.type,
+                                        condition: fragmentMeta.condition,
+                                        children: [],
+                                        else: []
+                                    };
+                                }
+                                else{
+                                    fragmentNode = {
+                                        type: "fragment",
+                                        id: fragmentMeta.id,
+                                        fragmentType: fragmentMeta.type,
+                                        condition: fragmentMeta.condition,
+                                        children: []
+                                    };
+                                }
 
                                 if (fragmentStack.length === 0) {
                                     // top-level fragment
                                     output.sequence.push(fragmentNode);
                                 } else {
-                                    // nested fragment → goes into parent
-                                    fragmentStack[fragmentStack.length - 1].children.push(fragmentNode);
+                                    // fragment inside another fragment's else
+
+                                    const fragmentMeta = getFragmentById(json.fragments, fragmentStack[fragmentStack.length - 1].id);
+                                    let elseStart = null;
+                                    let elseEnd = null;
+                                    if (fragmentMeta.else) {
+                                        elseStart = fragmentMeta.else[0];
+                                        elseEnd = fragmentMeta.else[1];
+                                    }
+                                    if (elseStart && call.offset >= elseStart && call.offset <= elseEnd) {
+                                        fragmentStack[fragmentStack.length - 1].else.push(fragmentNode);
+                                    }
+                                    else{
+                                        // nested fragment → goes into parent
+                                        fragmentStack[fragmentStack.length - 1].children.push(fragmentNode);
+                                    }
                                 }
 
                                 fragmentStack.push(fragmentNode);                     
@@ -119,8 +146,20 @@ function generateFlowFromJSON(json, methodName) {
 
                             if (fragmentStack.length === 0) {
                                 output.sequence.push(methodNode);
-                            } else {
+                            } else { 
+                                const fragmentMeta = getFragmentById(json.fragments, call.fragment);
+                                let elseStart = null;
+                                let elseEnd = null;
+                                if (fragmentMeta.else) {
+                                    elseStart = fragmentMeta.else[0];
+                                    elseEnd = fragmentMeta.else[1];
+                                }
+                                if (elseStart && call.offset >= elseStart && call.offset <= elseEnd) {
+                                    fragmentStack[fragmentStack.length - 1].else.push(methodNode);
+                                }
+                                else{
                                 fragmentStack[fragmentStack.length - 1].children.push(methodNode);
+                                }
                             }
 
 
@@ -148,7 +187,7 @@ function generateFlowFromJSON(json, methodName) {
 
 
 
-var methodName = "X"; //taken from User Input
+var methodName = "O"; //taken from User Input
 var obj = null;
 var finalOutput = {sequence: []};
 

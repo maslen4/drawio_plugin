@@ -86,70 +86,8 @@ function getProjectJSON(ast, code) {
             node.name + "\n"
             );
         }
-
-
-        if (node.name === "ifStatement") {
-
-            ifConditionStart = node.children.LBrace[0].startOffset + 1;
-            ifConditionEnd = node.children.RBrace[0].endOffset - 1;
-            ifStart = node.location.startOffset;
-            ifEnd = node.location.endOffset;
-
-            const condition = code.substring(ifConditionStart, ifConditionEnd + 1);
-
-            const fragment = {
-                id: crypto.randomUUID(),
-                type: node.children.Else ? "alt" : "opt",
-                condition: condition,
-                startOffset: node.location.startOffset,
-                endOffset: node.location.endOffset,
-                parent: fragmentStack.length
-                    ? fragmentStack[fragmentStack.length - 1].id
-                    : null,
-                messages: []
-            };
-
-            fragments.push(fragment);
-            output.fragments.push(fragment);
-            fragmentStack.push(fragment);
-        }
-
-        if (node.name === "forStatement" || node.name === "whileStatement") {
-            let loopConditionStart = 0;
-            let loopConditionEnd = 0;
-
-            if (node.children.enhancedForStatement){
-                loopConditionStart = node.children.enhancedForStatement[0].children.LBrace[0].endOffset + 1;
-                loopConditionEnd = node.children.enhancedForStatement[0].children.RBrace[0].startOffset - 1;
-            }
-            else if (node.children.basicForStatement){
-                loopConditionStart = node.children.basicForStatement[0].children.LBrace[0].endOffset + 1;
-                loopConditionEnd = node.children.basicForStatement[0].children.RBrace[0].startOffset - 1;
-            }
-            else{
-                loopConditionStart = node.children.LBrace[0].endOffset + 1;
-                loopConditionEnd = node.children.RBrace[0].startOffset - 1;
-            }
-            let loopStart = node.location.startOffset;
-            let loopEnd = node.location.endOffset;
-
-            const condition = code.substring(loopConditionStart, loopConditionEnd + 1);
-
-            const fragment = {
-                id: crypto.randomUUID(),
-                type: "loop",
-                condition: condition,
-                startOffset: loopStart,
-                endOffset: loopEnd,
-                parent: fragmentStack.length
-                    ? fragmentStack[fragmentStack.length - 1].id
-                    : null,
-                messages: []
-            };
-
-            fragments.push(fragment);
-            output.fragments.push(fragment);
-            fragmentStack.push(fragment);
+        if (node.name === "ifStatement"){
+            console.log();
         }
 
         if (node.name === "normalClassDeclaration" || node.name === "normalInterfaceDeclaration") {
@@ -204,10 +142,72 @@ function getProjectJSON(ast, code) {
             if (fieldName && fieldName.length > 0) {
                 lastClass[className].attributes.push({[fieldName]: {type: fieldType}});
             }
-        }else if (node.name === "unannClassOrInterfaceType"){
+        }else if (node.name === "ifStatement") { // create fragment for if statement
+
+            ifConditionStart = node.children.LBrace[0].startOffset + 1;
+            ifConditionEnd = node.children.RBrace[0].endOffset - 1;
+            ifStart = node.location.startOffset;
+            ifEnd = node.location.endOffset;
+
+            const condition = code.substring(ifConditionStart, ifConditionEnd + 1);
+
+            const fragment = {
+                id: crypto.randomUUID(),
+                type: node.children.Else ? "alt" : "opt",
+                condition: condition,
+                startOffset: node.location.startOffset,
+                endOffset: node.location.endOffset,
+                parent: fragmentStack.length
+                    ? fragmentStack[fragmentStack.length - 1].id
+                    : null,
+                messages: [],
+                else: node.children.Else ? [node.children.statement[node.children.statement.length-1].location.startOffset, node.children.statement[node.children.statement.length-1].location.endOffset] : null
+            };
+
+            fragments.push(fragment);
+            output.fragments.push(fragment);
+            fragmentStack.push(fragment);
+        }else if (node.name === "forStatement" || node.name === "whileStatement") { // create fragment for loop
+            let loopConditionStart = 0;
+            let loopConditionEnd = 0;
+
+            if (node.children.enhancedForStatement){
+                loopConditionStart = node.children.enhancedForStatement[0].children.LBrace[0].endOffset + 1;
+                loopConditionEnd = node.children.enhancedForStatement[0].children.RBrace[0].startOffset - 1;
+            }
+            else if (node.children.basicForStatement){
+                loopConditionStart = node.children.basicForStatement[0].children.LBrace[0].endOffset + 1;
+                loopConditionEnd = node.children.basicForStatement[0].children.RBrace[0].startOffset - 1;
+            }
+            else{
+                loopConditionStart = node.children.LBrace[0].endOffset + 1;
+                loopConditionEnd = node.children.RBrace[0].startOffset - 1;
+            }
+            let loopStart = node.location.startOffset;
+            let loopEnd = node.location.endOffset;
+
+            const condition = code.substring(loopConditionStart, loopConditionEnd + 1);
+
+            const fragment = {
+                id: crypto.randomUUID(),
+                type: "loop",
+                condition: condition,
+                startOffset: loopStart,
+                endOffset: loopEnd,
+                parent: fragmentStack.length
+                    ? fragmentStack[fragmentStack.length - 1].id
+                    : null,
+                messages: []
+            };
+
+            fragments.push(fragment);
+            output.fragments.push(fragment);
+            fragmentStack.push(fragment);
+        }
+        else if (node.name === "unannClassOrInterfaceType"){ // store current class instance for object declaration
             currentClassInstance = node.children.unannClassType[0].children.Identifier[0].image;
         }
-        else if (node.name === "variableDeclaratorId"){
+        else if (node.name === "variableDeclaratorId"){ // found object declaration
             var foundVarName = node.children.Identifier[0].image;
             // register object in method
             currentObjects[foundVarName] = {
@@ -215,7 +215,7 @@ function getProjectJSON(ast, code) {
                 calls: []
             };
             currentClassInstance = null; // reset   
-        }else if (node.name === "fqnOrRefTypePartFirst"){
+        }else if (node.name === "fqnOrRefTypePartFirst"){ // found method call
             currentVarName = node.children.fqnOrRefTypePartCommon[0].children.Identifier[0].image;
 
             for (let i = 0; i < fragmentStack.length; i++) { // check if we are inside any fragments

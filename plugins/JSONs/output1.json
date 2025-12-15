@@ -3,15 +3,7 @@
     [
       {
         "type": "method",
-        "name": "W",
-        "arguments": [],
-        "from": "LoneClass",
-        "to": "LoneClass",
-        "return": "void"
-      },
-      {
-        "type": "method",
-        "name": "Method04",
+        "name": "Method01",
         "arguments": [],
         "from": "LoneClass",
         "to": "FriendlyClass",
@@ -19,13 +11,61 @@
       },
       {
         "type": "fragment",
-        "id": "6c6f5ced-73c8-4844-8e89-12cb5543361f",
-        "fragmentType": "loop",
-        "condition": "i < 10 ",
+        "id": "0b754e9d-1559-4ba5-9f91-29fc37f430f3",
+        "fragmentType": "opt",
+        "condition": "a",
         "children": [
           {
             "type": "method",
-            "name": "Method05",
+            "name": "Method04",
+            "arguments": [],
+            "from": "LoneClass",
+            "to": "FriendlyClass",
+            "return": "void"
+          },
+          {
+            "type": "fragment",
+            "id": "d0918f22-c678-40f4-b02f-5a8e30575b44",
+            "fragmentType": "opt",
+            "condition": "b",
+            "children": [
+              {
+                "type": "method",
+                "name": "Method05",
+                "arguments": [],
+                "from": "LoneClass",
+                "to": "FriendlyClass",
+                "return": "void"
+              },
+              {
+                "type": "fragment",
+                "id": "0a8c7f26-bbb3-4a33-8e43-91c234b4c988",
+                "fragmentType": "opt",
+                "condition": "x < 55 + 14 && b || a",
+                "children": [
+                  {
+                    "type": "method",
+                    "name": "Method06",
+                    "arguments": [],
+                    "from": "LoneClass",
+                    "to": "FriendlyClass",
+                    "return": "void"
+                  }
+                ]
+              },
+              {
+                "type": "method",
+                "name": "Method07",
+                "arguments": [],
+                "from": "LoneClass",
+                "to": "FriendlyClass",
+                "return": "void"
+              }
+            ]
+          },
+          {
+            "type": "method",
+            "name": "Method08",
             "arguments": [],
             "from": "LoneClass",
             "to": "FriendlyClass",
@@ -35,18 +75,10 @@
       },
       {
         "type": "method",
-        "name": "Method06",
+        "name": "Method09",
         "arguments": [],
         "from": "LoneClass",
         "to": "FriendlyClass",
-        "return": "void"
-      },
-      {
-        "type": "method",
-        "name": "A",
-        "arguments": [],
-        "from": "LoneClass",
-        "to": "LoneClass",
         "return": "void"
       }
     ]
